@@ -4,7 +4,7 @@ $base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/header.php';
 
-// Compatibilidad para intdiv en PHP < 7 (PHP 5.6)
+// Compatibilidad para intdiv en PHP < 7 (PHP 5.6)  Modificar factura
 if (!function_exists('intdiv')) {
     function intdiv($a, $b) {
         if ($b == 0) {
