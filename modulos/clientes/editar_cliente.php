@@ -1,0 +1,104 @@
+<?php
+$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+include $base_path . 'includes/conexion.php';
+include $base_path . 'includes/header.php';
+
+if (!isset($_GET['id'])) {
+    die("ID de cliente no proporcionado.");
+}
+$id = $_GET['id'];
+$mensaje = "";
+
+// Obtener datos actuales
+$stmt = $pdo->prepare("SELECT * FROM clientes WHERE id=:id");
+$stmt->execute([':id'=>$id]);
+$cliente = $stmt->fetch();
+if (!$cliente) die("Cliente no encontrado.");
+
+// Procesar actualización
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $nombre = $_POST['nombre'];
+    $apellido = $_POST['apellido'];
+    $ruc = $_POST['ruc'];
+    $telefono = $_POST['telefono'];
+    $direccion = $_POST['direccion'];
+    $email = $_POST['email'];
+
+    if (!preg_match("/^[A-Za-z\s]+$/", $nombre) || !preg_match("/^[A-Za-z\s]+$/", $apellido)) {
+        $mensaje = "Error: El nombre y apellido solo pueden contener letras y espacios.";
+    } elseif (!preg_match("/^[0-9\-]+$/", $ruc)) {
+        $mensaje = "Error: El RUC solo puede contener numeros y guion.";
+    } elseif (!preg_match("/^[0-9]+$/", $telefono)) {
+        $mensaje = "Error: El telefono solo puede contener numeros.";
+    } else {
+        $sql = "UPDATE clientes SET nombre=:nombre, apellido=:apellido, ruc=:ruc, telefono=:telefono, direccion=:direccion, email=:email WHERE id=:id";
+        $stmt = $pdo->prepare($sql);
+        if($stmt->execute([
+            ':nombre'=>$nombre,
+            ':apellido'=>$apellido,
+            ':ruc'=>$ruc,
+            ':telefono'=>$telefono,
+            ':direccion'=>$direccion,
+            ':email'=>$email,
+            ':id'=>$id
+        ])){
+            $mensaje = "Cliente actualizado correctamente.";
+            // Actualizar los datos del formulario
+            $cliente = ['nombre'=>$nombre, 'apellido'=>$apellido, 'ruc'=>$ruc, 'telefono'=>$telefono, 'direccion'=>$direccion, 'email'=>$email];
+        } else {
+            $mensaje = "Error al actualizar cliente.";
+        }
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Editar Cliente</title>
+<link rel="stylesheet" href="/repuestos/style.css">
+<style>
+.container { max-width:600px; margin:80px auto; background:#fff; padding:30px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
+h1 { text-align:center; margin-bottom:20px; color:#1e293b; }
+label { display:block; margin:10px 0 5px; }
+input { width:100%; padding:10px; margin-bottom:15px; border:1px solid #ccc; border-radius:6px; font-size:16px; }
+button { width:100%; padding:12px; background:#2563eb; color:white; border:none; border-radius:6px; font-size:16px; cursor:pointer; transition:0.3s; }
+button:hover { background:#1e40af; }
+.mensaje { text-align:center; margin-bottom:15px; font-weight:bold; color:red; }
+.mensaje.exito { color:green; }
+</style>
+</head>
+<body>
+
+<div class="container">
+<h1>Editar Cliente</h1>
+<?php if($mensaje != ""): ?>
+    <div class="mensaje <?= strpos($mensaje,'Error') === false ? 'exito' : '' ?>"><?= $mensaje ?></div>
+<?php endif; ?>
+<form method="POST">
+<label>Nombre:</label>
+<input type="text" name="nombre" value="<?= htmlspecialchars($cliente['nombre']) ?>" required>
+
+<label>Apellido:</label>
+<input type="text" name="apellido" value="<?= htmlspecialchars($cliente['apellido']) ?>" required>
+
+<label>RUC:</label>
+<input type="text" name="ruc" value="<?= htmlspecialchars($cliente['ruc']) ?>" required>
+
+<label>Telefono:</label>
+<input type="text" name="telefono" value="<?= htmlspecialchars($cliente['telefono']) ?>">
+
+<label>Direccion:</label>
+<input type="text" name="direccion" value="<?= htmlspecialchars($cliente['direccion']) ?>">
+
+<label>Email:</label>
+<input type="email" name="email" value="<?= htmlspecialchars($cliente['email']) ?>">
+
+<button type="submit">Actualizar Cliente</button>
+</form>
+</div>
+
+<?php include $base_path . 'includes/footer.php'; ?>
+</body>
+</html>

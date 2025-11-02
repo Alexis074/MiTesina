@@ -1,0 +1,45 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+}
+
+/* Barra de navegación */
+.navbar {
+    position: fixed;       /* Fija la barra */
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #1e293b;
+    color: white;
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    z-index: 1000;         /* Para que esté siempre encima */
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background 0.3s;
+}
+
+.navbar a:hover {
+    background: #2563eb;
+}
+
+.navbar .logo {
+    font-weight: bold;
+    font-size: 18px;
+    margin-right: auto;
+}
+
+/* Contenedor principal */
+.container {
+    margin-top: 60px;  /* Ajusta el contenido debajo de la barra */
+    padding: 20px;
+}
