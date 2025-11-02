@@ -1,5 +1,9 @@
 <?php
-$conexion = new mysqli("localhost", "root", "", "db_repuestos");
+$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+include $base_path . 'includes/conexion.php';
+include $base_path . 'includes/header.php';
+
+
 if ($conexion->connect_error) die("Error de conexión: " . $conexion->connect_error);
 $sql = "SELECT * FROM productos ORDER BY stock ASC";
 $resultado = $conexion->query($sql);
@@ -9,7 +13,7 @@ $resultado = $conexion->query($sql);
 <head>
 <meta charset="UTF-8">
 <title>Stock - Repuestos Doble A</title>
-<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="/repuestos/style.css">
 <style>
 .container { padding: 20px; margin-top: 60px; }
 table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -21,7 +25,7 @@ tr:hover { background: #e0f2fe; }
 </head>
 <body>
 
-<?php include '../header.php'; ?>
+
 
 <div class="container">
 <h1>Control de Stock</h1>

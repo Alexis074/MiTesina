@@ -17,19 +17,19 @@ if (!$cliente) die("Cliente no encontrado.");
 
 // Procesar actualización
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nombre = $_POST['nombre'];
-    $apellido = $_POST['apellido'];
-    $ruc = $_POST['ruc'];
-    $telefono = $_POST['telefono'];
-    $direccion = $_POST['direccion'];
-    $email = $_POST['email'];
+    $nombre = trim($_POST['nombre']);
+    $apellido = trim($_POST['apellido']);
+    $ruc = trim($_POST['ruc']);
+    $telefono = trim($_POST['telefono']);
+    $direccion = trim($_POST['direccion']);
+    $email = trim($_POST['email']);
 
     if (!preg_match("/^[A-Za-z\s]+$/", $nombre) || !preg_match("/^[A-Za-z\s]+$/", $apellido)) {
         $mensaje = "Error: El nombre y apellido solo pueden contener letras y espacios.";
     } elseif (!preg_match("/^[0-9\-]+$/", $ruc)) {
-        $mensaje = "Error: El RUC solo puede contener numeros y guion.";
-    } elseif (!preg_match("/^[0-9]+$/", $telefono)) {
-        $mensaje = "Error: El telefono solo puede contener numeros.";
+        $mensaje = "Error: El RUC solo puede contener números y guion.";
+    } elseif (!preg_match("/^[0-9]+$/", $telefono) && $telefono != "") {
+        $mensaje = "Error: El teléfono solo puede contener números.";
     } else {
         $sql = "UPDATE clientes SET nombre=:nombre, apellido=:apellido, ruc=:ruc, telefono=:telefono, direccion=:direccion, email=:email WHERE id=:id";
         $stmt = $pdo->prepare($sql);
@@ -52,53 +52,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Editar Cliente</title>
-<link rel="stylesheet" href="/repuestos/style.css">
-<style>
-.container { max-width:600px; margin:80px auto; background:#fff; padding:30px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
-h1 { text-align:center; margin-bottom:20px; color:#1e293b; }
-label { display:block; margin:10px 0 5px; }
-input { width:100%; padding:10px; margin-bottom:15px; border:1px solid #ccc; border-radius:6px; font-size:16px; }
-button { width:100%; padding:12px; background:#2563eb; color:white; border:none; border-radius:6px; font-size:16px; cursor:pointer; transition:0.3s; }
-button:hover { background:#1e40af; }
-.mensaje { text-align:center; margin-bottom:15px; font-weight:bold; color:red; }
-.mensaje.exito { color:green; }
-</style>
-</head>
-<body>
-
 <div class="container">
-<h1>Editar Cliente</h1>
-<?php if($mensaje != ""): ?>
-    <div class="mensaje <?= strpos($mensaje,'Error') === false ? 'exito' : '' ?>"><?= $mensaje ?></div>
-<?php endif; ?>
-<form method="POST">
-<label>Nombre:</label>
-<input type="text" name="nombre" value="<?= htmlspecialchars($cliente['nombre']) ?>" required>
+    <h1>Editar Cliente</h1>
 
-<label>Apellido:</label>
-<input type="text" name="apellido" value="<?= htmlspecialchars($cliente['apellido']) ?>" required>
+    <?php if($mensaje != ""): ?>
+        <div class="mensaje <?= strpos($mensaje,'Error') === false ? 'exito' : 'error' ?>">
+            <?= $mensaje ?>
+        </div>
+    <?php endif; ?>
 
-<label>RUC:</label>
-<input type="text" name="ruc" value="<?= htmlspecialchars($cliente['ruc']) ?>" required>
+    <form method="POST">
+        <label>Nombre:</label>
+        <input type="text" name="nombre" value="<?= htmlspecialchars($cliente['nombre']) ?>" required>
 
-<label>Telefono:</label>
-<input type="text" name="telefono" value="<?= htmlspecialchars($cliente['telefono']) ?>">
+        <label>Apellido:</label>
+        <input type="text" name="apellido" value="<?= htmlspecialchars($cliente['apellido']) ?>" required>
 
-<label>Direccion:</label>
-<input type="text" name="direccion" value="<?= htmlspecialchars($cliente['direccion']) ?>">
+        <label>RUC:</label>
+        <input type="text" name="ruc" value="<?= htmlspecialchars($cliente['ruc']) ?>" required>
 
-<label>Email:</label>
-<input type="email" name="email" value="<?= htmlspecialchars($cliente['email']) ?>">
+        <label>Teléfono:</label>
+        <input type="text" name="telefono" value="<?= htmlspecialchars($cliente['telefono']) ?>">
 
-<button type="submit">Actualizar Cliente</button>
-</form>
+        <label>Dirección:</label>
+        <input type="text" name="direccion" value="<?= htmlspecialchars($cliente['direccion']) ?>">
+
+        <label>Email:</label>
+        <input type="email" name="email" value="<?= htmlspecialchars($cliente['email']) ?>">
+
+        <button type="submit">Actualizar Cliente</button>
+    </form>
 </div>
 
 <?php include $base_path . 'includes/footer.php'; ?>
-</body>
-</html>

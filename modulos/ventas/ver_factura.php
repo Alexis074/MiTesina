@@ -11,67 +11,62 @@ if (!function_exists('intdiv_compat')) {
     }
 }
 
-// Convierte número a letras en español (sin centavos)
-if (!function_exists('numero_a_letras')) {
-    function numero_a_letras($numero) {
-        $numero = number_format((float)$numero, 2, '.', '');
-        list($entero, $decimales) = explode('.', $numero);
-        $entero = (int)$entero;
+// Función para convertir número a letras en español (solo enteros)
+function numero_a_letras($numero) {
+    $numero = round($numero); // eliminamos decimales
+    if ($numero == 0) return 'CERO';
 
-        $unidades = ['', 'UNO', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE'];
-        $decenas = ['', 'DIEZ', 'VEINTE', 'TREINTA', 'CUARENTA', 'CINCUENTA', 'SESENTA', 'SETENTA', 'OCHENTA', 'NOVENTA'];
-        $especiales = [11=>'ONCE',12=>'DOCE',13=>'TRECE',14=>'CATORCE',15=>'QUINCE',20=>'VEINTE'];
+    $unidades = ['', 'UNO', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE'];
+    $decenas = ['', 'DIEZ', 'VEINTE', 'TREINTA', 'CUARENTA', 'CINCUENTA', 'SESENTA', 'SETENTA', 'OCHENTA', 'NOVENTA'];
+    $centenas = ['', 'CIENTO', 'DOSCIENTOS', 'TRESCIENTOS', 'CUATROCIENTOS', 'QUINIENTOS', 'SEISCIENTOS', 'SETECIENTOS', 'OCHOCIENTOS', 'NOVECIENTOS'];
+    $especiales = [11=>'ONCE',12=>'DOCE',13=>'TRECE',14=>'CATORCE',15=>'QUINCE'];
 
-        $convert_hasta_mil = function($n) use ($unidades, $decenas, $especiales, &$convert_hasta_mil) {
-            $n = (int)$n;
-            if ($n == 0) return 'CERO';
-            $str = '';
-            if ($n >= 100) {
-                $hund = intdiv_compat($n, 100);
-                if ($hund == 1 && $n % 100 == 0) $str .= 'CIEN';
-                else {
-                    $map = [1=>'CIENTO',2=>'DOSCIENTOS',3=>'TRESCIENTOS',4=>'CUATROCIENTOS',5=>'QUINIENTOS',6=>'SEISCIENTOS',7=>'SETECIENTOS',8=>'OCHOCIENTOS',9=>'NOVECIENTOS'];
-                    $str .= $map[$hund];
-                }
-                $n %= 100;
-                if ($n) $str .= ' ';
-            }
-            if ($n > 10 && $n < 16) {
-                $str .= $especiales[$n];
-            } elseif ($n == 10 || $n >= 20) {
-                $d = intdiv_compat($n, 10);
-                $u = $n % 10;
-                if ($d == 2 && $u > 0) {
-                    $str .= 'VEINTI' . strtolower($unidades[$u]);
-                } else {
-                    $str .= $decenas[$d];
-                    if ($u) $str .= ' Y ' . $unidades[$u];
-                }
-            } else {
-                $str .= $unidades[$n];
-            }
-            return strtoupper($str);
-        };
+    $convert_hasta_999 = function($n) use ($unidades, $decenas, $centenas, $especiales) {
+        $s = '';
+        if ($n == 100) return 'CIEN';
+        if ($n > 100) {
+            $c = intdiv_compat($n, 100); // <-- USAR intdiv_compat
+            $s .= $centenas[$c] . ' ';
+            $n = $n % 100;
+        }
+        if ($n >= 11 && $n <= 15) {
+            $s .= $especiales[$n];
+        } elseif ($n >= 16 && $n <= 19) {
+            $s .= 'DIECI' . $unidades[$n - 10];
+        } elseif ($n == 10 || $n == 20 || $n == 30 || $n == 40 || $n == 50 || $n == 60 || $n == 70 || $n == 80 || $n == 90) {
+            $d = intdiv_compat($n, 10); // <-- USAR intdiv_compat
+            $s .= $decenas[$d];
+        } elseif ($n > 20 && $n < 30) {
+            $s .= 'VEINTI' . $unidades[$n - 20];
+        } elseif ($n > 30 && $n < 100) {
+            $d = intdiv_compat($n, 10); // <-- USAR intdiv_compat
+            $u = $n % 10;
+            $s .= $decenas[$d];
+            if ($u != 0) $s .= ' Y ' . $unidades[$u];
+        } elseif ($n > 0 && $n < 10) {
+            $s .= $unidades[$n];
+        }
+        return trim($s);
+    };
 
-        $partes = [];
-        if ($entero >= 1000000) {
-            $millones = intdiv_compat($entero, 1000000);
-            $partes[] = ($millones == 1) ? 'UN MILLON' : numero_a_letras($millones) . ' MILLONES';
-            $entero %= 1000000;
-        }
-        if ($entero >= 1000) {
-            $miles = intdiv_compat($entero, 1000);
-            if ($miles == 1) $partes[] = 'MIL';
-            else $partes[] = $convert_hasta_mil($miles) . ' MIL';
-            $entero %= 1000;
-        }
-        if ($entero > 0) {
-            $partes[] = $convert_hasta_mil($entero);
-        }
-        $texto_entero = $partes ? implode(' ', $partes) : 'CERO';
-        return trim($texto_entero);
+    $partes = [];
+    if ($numero >= 1000000) {
+        $millones = intdiv_compat($numero, 1000000); // <-- USAR intdiv_compat
+        $partes[] = ($millones == 1 ? 'UN MILLON' : numero_a_letras($millones) . ' MILLONES');
+        $numero = $numero % 1000000;
     }
+    if ($numero >= 1000) {
+        $miles = intdiv_compat($numero, 1000); // <-- USAR intdiv_compat
+        $partes[] = ($miles == 1 ? 'MIL' : $convert_hasta_999($miles) . ' MIL');
+        $numero = $numero % 1000;
+    }
+    if ($numero > 0) {
+        $partes[] = $convert_hasta_999($numero);
+    }
+
+    return implode(' ', $partes);
 }
+
 
 if(!isset($_GET['id'])) {
     echo "Factura no especificada.";
@@ -93,7 +88,7 @@ $empresa = array(
 );
 
 // Obtener cabecera de factura
-$stmt_cab = $pdo->prepare("SELECT fv.*, c.nombre, c.apellido, c.ruc 
+$stmt_cab = $pdo->prepare("SELECT fv.*, c.nombre, c.apellido, c.ruc, c.direccion, c.telefono  
                            FROM cabecera_factura_ventas fv
                            JOIN clientes c ON fv.cliente_id = c.id
                            WHERE fv.id = :id");
@@ -131,7 +126,7 @@ body { font-family: Arial, sans-serif; margin:0; padding:0; background: #f7f7f7;
 .factura-table { width:100%; border-collapse:collapse; margin-top:15px; font-size:13px; }
 .factura-table th, .factura-table td { border:1px solid #000; padding:6px; text-align:center; }
 .factura-table th { background:#e8e8e8; }
-tfoot td { font-weight:bold; }
+tfoot td { font-weight:bold; text-align:left; }
 .timbrado { margin-top:10px; font-size:12px; text-align:left; }
 .footer { text-align:center; font-size:12px; margin-top:20px; color:#555; }
 @media print { .btn-print { display:none; } body{background:white;} }
@@ -164,7 +159,9 @@ tfoot td { font-weight:bold; }
     <div class="datos-cliente">
         <div>
             <strong>Cliente:</strong> <?php echo htmlspecialchars($factura['nombre'].' '.$factura['apellido']); ?><br>
-            <strong>RUC:</strong> <?php echo htmlspecialchars($factura['ruc']); ?>
+            <strong>RUC:</strong> <?php echo htmlspecialchars($factura['ruc']); ?><br> 
+            <strong>Dirección:</strong> <?php echo htmlspecialchars($factura['direccion']); ?><br>
+            <strong>Teléfono:</strong> <?php echo htmlspecialchars($factura['telefono']); ?><br>
         </div>
         <div style="text-align:right;">
             <strong>Fecha:</strong> <?php echo date('d/m/Y H:i', strtotime($factura['fecha_hora'])); ?><br>
@@ -210,7 +207,6 @@ tfoot td { font-weight:bold; }
 
         $iva_5 = $base_5 * 0.05;
         $iva_10 = $base_10 * 0.10;
-
         $total_factura = $base_exenta + $base_5 + $iva_5 + $base_10 + $iva_10;
         $total_letras = numero_a_letras($total_factura);
         ?>
@@ -220,7 +216,7 @@ tfoot td { font-weight:bold; }
             <tr><td colspan="4" style="text-align:right;">IVA 5%:</td><td><?php echo number_format($iva_5,0,',','.'); ?></td></tr>
             <tr><td colspan="4" style="text-align:right;">IVA 10%:</td><td><?php echo number_format($iva_10,0,',','.'); ?></td></tr>
             <tr><td colspan="4" style="text-align:right;"><strong>TOTAL:</strong></td><td><strong><?php echo number_format($total_factura,0,',','.'); ?></strong></td></tr>
-            <tr><td colspan="5" style="text-align:left; font-weight:bold;">TOTAL(en letras):<?php echo $total_letras; ?></td></tr>
+            <tr><td colspan="5" style="text-align:left; font-weight:bold;">TOTAL (en letras): <?php echo $total_letras; ?></td></tr>
         </tfoot>
     </table>
 

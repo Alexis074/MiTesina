@@ -114,29 +114,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Compras - Repuestos Doble A</title>
-<link rel="stylesheet" href="/repuestos/style.css">
+<title>Registrar Venta - Repuestos Doble A</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
-.container { padding:20px; margin-top:60px; }
-h1 { margin-bottom:20px; }
-form { background:white; padding:20px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.1); margin-bottom:20px; }
-form label { display:block; margin:10px 0 5px; }
-form select, form input { width:100%; padding:8px; margin-bottom:10px; border-radius:4px; border:1px solid #ccc; }
-form button { padding:10px; background:#2563eb; color:white; border:none; border-radius:4px; cursor:pointer; }
-form button:hover { background:#1e40af; }
-.mensaje { padding:10px; margin-bottom:15px; border-radius:4px; text-align:center; }
-.mensaje.exito { background-color:#d1fae5; color:#065f46; }
-.mensaje.error { background-color:#fee2e2; color:#991b1b; }
-table { width:100%; border-collapse:collapse; background:white; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
-th, td { border:1px solid #ccc; padding:8px; text-align:center; }
-th { background:#2563eb; color:white; }
-tr:hover { background:#e0f2fe; }
-.btn { padding:5px 10px; border-radius:4px; text-decoration:none; font-size:14px; }
-.btn-export { background:#2563eb; color:white; }
+.container{padding:20px;margin-top:60px;}
+.venta-form{background:white;padding:20px;border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,0.1);margin-bottom:20px;}
+.producto_row{display:flex;gap:10px;margin-bottom:10px;align-items:flex-end;}
+.producto_row select, .producto_row input{flex:1;}
+.btn-add, .btn-delete{height:38px;}
+.mensaje{padding:10px;margin-bottom:15px;border-radius:4px;text-align:center;background:#d1fae5;color:#065f46;}
+#cuotas_container{display:none;margin-top:10px;}
 </style>
 </head>
 <body>
-
 <div class="container">
 <h1>Registrar Venta</h1>
 
