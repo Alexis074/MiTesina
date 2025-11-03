@@ -75,7 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label>Email:</label>
         <input type="email" name="email" value="<?= htmlspecialchars($cliente['email']) ?>">
 
-        <button type="submit">Actualizar Cliente</button>
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">Actualizar Cliente</button>
+        </div>
     </form>
 </div>
 

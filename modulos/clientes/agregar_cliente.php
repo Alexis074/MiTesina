@@ -68,7 +68,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label>Email:</label>
         <input type="email" name="email" value="<?= isset($email) ? htmlspecialchars($email) : '' ?>">
 
-        <button type="submit" class="btn btn-edit">Agregar Cliente</button>
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">Agregar Cliente</button>
+        </div>
+
+
+
     </form>
 </div>
 

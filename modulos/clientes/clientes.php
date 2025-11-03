@@ -6,9 +6,10 @@ include $base_path . 'includes/header.php';
 
 <div class="container tabla-responsive">
     <h1>Clientes</h1>
-    <a href="agregar_cliente.php" class="btn btn-agregar">
-        + Agregar Nuevo Cliente
-    </a>
+    <div class="form-actions-right">
+        <button type="submit" class="btn-submit">+ Agregar Cliente</button>
+    </div>
+
 
     <br><br>
     <table class="crud-table">

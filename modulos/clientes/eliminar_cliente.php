@@ -31,9 +31,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <p>Seguro que deseas eliminar al cliente <strong><?= htmlspecialchars($cliente['nombre'] . " " . $cliente['apellido']) ?></strong>?</p>
 
     <form method="POST" style="display:inline;">
-        <button type="submit" class="btn btn-delete">Si, eliminar</button>
-    </form>
-    <a href="clientes.php" class="btn btn-edit">Cancelar</a>
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">Sí, eliminar</button>
+            <a href="clientes.php" class="btn-cancelar">Cancelar</a>
+        </div>
 </div>
 
 <?php include $base_path . 'includes/footer.php'; ?>

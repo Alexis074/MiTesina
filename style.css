@@ -5,12 +5,13 @@
     align-items: center;
     padding: 0 20px;
     position: fixed;
-    top: 0; left: 0; right: 0;
+    top: 0;
+    left: 0;
+    right: 0;
     height: 70px;
     z-index: 1000;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
-
 .navbar .logo {
     color: white;
     font-weight: bold;
@@ -20,7 +21,6 @@
     align-items: center;
     gap: 12px;
 }
-
 .navbar a {
     color: white;
     text-decoration: none;
@@ -33,7 +33,6 @@
     font-size: 18px;
     transition: background 0.3s, transform 0.2s;
 }
-
 .navbar a:hover {
     background-color: #2563eb;
     transform: scale(1.1);
@@ -45,10 +44,9 @@ body {
     font-family: Arial, sans-serif;
     background: #f4f6f8;
 }
-
 .container {
     padding: 20px;
-    margin-top: 100px;
+    margin-top: 50px;
     max-width: 100%;
     margin-left: auto;
     margin-right: auto;
@@ -66,13 +64,11 @@ body {
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
-
 form label {
     display:block;
     margin:10px 0 5px;
     font-weight: bold;
 }
-
 form input, form button {
     width:100%;
     padding:10px;
@@ -82,7 +78,6 @@ form input, form button {
     font-size:16px;
     box-sizing: border-box;
 }
-
 form button {
     background:#2563eb;
     color:white;
@@ -91,7 +86,6 @@ form button {
     font-weight: bold;
     transition: background 0.3s, transform 0.2s;
 }
-
 form button:hover {
     background:#1e40af;
     transform: scale(1.02);
@@ -105,12 +99,10 @@ form button:hover {
     text-align:center;
     font-weight:bold;
 }
-
 .mensaje.exito {
     background-color:#d1fae5;
     color:#065f46;
 }
-
 .mensaje.error {
     background-color:#fee2e2;
     color:#991b1b;
@@ -118,11 +110,10 @@ form button:hover {
 
 /* ==================== Tabla CRUD ==================== */
 table.crud-table {
-    width:100%; 
-    border-collapse:collapse; 
-    table-layout: auto; /* IMPORTANTE: permite que la columna de acciones se ajuste */
+    width:100%;
+    border-collapse:collapse;
+    table-layout: auto;
 }
-
 table.crud-table th, table.crud-table td {
     border:1px solid #ccc;
     padding:12px;
@@ -133,36 +124,25 @@ table.crud-table th, table.crud-table td {
 }
 
 /* Anchos proporcionales de columnas */
-table.crud-table th:nth-child(1),
-table.crud-table td:nth-child(1) { width: 5%; }   /* ID */
-table.crud-table th:nth-child(2),
-table.crud-table td:nth-child(2) { width: 15%; }  /* Nombre */
-table.crud-table th:nth-child(3),
-table.crud-table td:nth-child(3) { width: 15%; }  /* Apellido */
-table.crud-table th:nth-child(4),
-table.crud-table td:nth-child(4) { width: 10%; }  /* RUC */
-table.crud-table th:nth-child(5),
-table.crud-table td:nth-child(5) { width: 10%; }  /* Teléfono */
-table.crud-table th:nth-child(6),
-table.crud-table td:nth-child(6) { width: 20%; }  /* Dirección */
-table.crud-table th:nth-child(7),
-table.crud-table td:nth-child(7) { width: 15%; }  /* Email */
-table.crud-table th:nth-child(8),
-table.crud-table td:nth-child(8) { width: auto; min-width: 100px; }   /* Acciones ajustable */
+table.crud-table th:nth-child(1), table.crud-table td:nth-child(1) { width: 5%; }   /* ID */
+table.crud-table th:nth-child(2), table.crud-table td:nth-child(2) { width: 15%; } /* Nombre */
+table.crud-table th:nth-child(3), table.crud-table td:nth-child(3) { width: 15%; } /* Apellido */
+table.crud-table th:nth-child(4), table.crud-table td:nth-child(4) { width: 10%; } /* RUC */
+table.crud-table th:nth-child(5), table.crud-table td:nth-child(5) { width: 10%; } /* Teléfono */
+table.crud-table th:nth-child(6), table.crud-table td:nth-child(6) { width: 20%; } /* Dirección */
+table.crud-table th:nth-child(7), table.crud-table td:nth-child(7) { width: 15%; } /* Email */
+table.crud-table th:nth-child(8), table.crud-table td:nth-child(8) {
+    width: 10%;       /* Acciones */
+    min-width: 120px; /* Espacio mínimo */
+}
 
 /* Estilo de cabecera y filas */
 table.crud-table th {
-    background:blue;
-    color:white;
+    background: blue;
+    color: white;
 }
-
-table.crud-table tr:nth-child(even) {
-    background:#f9f9f9;
-}
-
-table.crud-table tr:hover {
-    background:#e0f2fe;
-}
+table.crud-table tr:nth-child(even) { background:#f9f9f9; }
+table.crud-table tr:hover { background:#e0f2fe; }
 
 /* ==================== Botones con iconos y tooltips ==================== */
 .acciones {
@@ -170,48 +150,49 @@ table.crud-table tr:hover {
     justify-content: center;
     gap: 6px;
 }
-
-.btn {     /* Todos los botones funcionaran asi  */
-    width: 120px;          
-    height: 40px;
+.btn {
     border: none;
     border-radius: 6px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    color: white;
-    position: relative;   
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+    position: relative;
     transition: background 0.3s, transform 0.2s;
-    overflow: visible;
-    white-space: nowrap;      
-}
-
-.btn-edit {
-    background: blue;    
     color: white;
 }
-
+.btn-edit {
+    background: blue;
+    color: white;
+    
+}
 .btn-edit:hover {
-    background:skyblue ;
+    background: #2563eb;
     transform: scale(1.1);
 }
-
 .btn-delete {
     background: #ef4444;
+   
 }
-
 .btn-delete:hover {
     background: #dc2626;
     transform: scale(1.1);
+}
+
+/* Íconos blancos */
+.btn i {
+    color: white;
+    font-size: 18px;
 }
 
 /* Tooltips */
 .btn[data-tooltip]:hover::after {
     content: attr(data-tooltip);
     position: absolute;
-    bottom: 125%;   
+    bottom: 125%;
     left: 50%;
     transform: translateX(-50%);
     background: #333;
@@ -224,11 +205,10 @@ table.crud-table tr:hover {
     pointer-events: none;
     z-index: 100;
 }
-
 .btn[data-tooltip]:hover::before {
     content: '';
     position: absolute;
-    bottom: 115%;   
+    bottom: 115%;
     left: 50%;
     transform: translateX(-50%);
     border-width: 6px;
@@ -237,58 +217,83 @@ table.crud-table tr:hover {
     z-index: 100;
 }
 
-/* ==================== Responsive ==================== */
-@media (max-width:768px){
-    .navbar {
-        flex-direction: column;
-        height: auto;
-        padding: 10px;
-    }
-    .navbar a {
-        margin: 5px 0;
-    }
-    table.crud-table {
-        font-size:12px;
-    }
-    .btn {
-        width: 30px;
-        height: 30px;
-        font-size: 14px;
-    }
-    .btn[data-tooltip]:hover::after,
-    .btn[data-tooltip]:hover::before {
-        font-size: 10px;
-    }
-    form input, form button {
-        font-size:14px;
-        padding:8px;
-    }
-    .container, .form-container {
-        margin:20px auto;
-        padding:10px;
-    }
-}
-
-/* Botón de agregar cliente en una sola línea */
+/* ==================== Botón agregar cliente ==================== */
 .btn-agregar {
-    padding: 5px 55px;          /* Ajustamos para que quede compacto */
-    background-color: blue;   /* Color de fondo azul agregar cliente*/
+    padding: 8px 100px;
+    background-color: blue;
     color: white;
+    text-align: center; /* centra horizontalmente el botón */
+    margin-top: 20px;   /* un poco de espacio arriba del botón */
     font-weight: bold;
-    border-radius: 6px;
+    border-radius: 6px;      
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    white-space: nowrap;        /* Evita que el texto se rompa en varias líneas */
-    overflow: hidden;
-    text-overflow: ellipsis;    /* Si sobra texto, se corta con "..." */
+    white-space: nowrap;
     transition: background 0.3s, transform 0.2s;
 }
-
 .btn-agregar:hover {
     background-color: #1e40af;
     transform: scale(1.05);
 }
 
+/* ==================== Responsive ==================== */
+@media (max-width:768px){
+    .navbar { flex-direction: column; height: auto; padding: 10px; }
+    .navbar a { margin: 5px 0; }
+    table.crud-table { font-size:12px; }
+    .btn { width: 30px; height: 30px; font-size: 14px; }
+    form input, form button { font-size:14px; padding:8px; }
+    .container, .form-container { margin:20px auto; padding:10px; }
+}
 
+/* Botón de enviar en formulario para agregar nuevo cliente por ejemplo */
+.btn-submit {
+    width: auto; /* No fijo, se adapta al texto */
+    padding: 12px 40px;
+    background-color: #2563eb;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.btn-submit:hover {
+    background-color: #1e40af;
+    transform: scale(1.05);
+}
+
+.form-actions {
+    text-align: center; /* centra horizontalmente el botón */
+    margin-top: 20px;   /* un poco de espacio arriba del botón */
+}
+
+.btn-cancelar {
+    padding: 12px 40px;
+    background-color: #ef4444;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    margin-left: 10px; /* separa de botón principal */
+    display: inline-block;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.btn-cancelar:hover {
+    background-color: #dc2626;
+    transform: scale(1.05);
+}
+
+.form-actions-right {
+    display: flex;
+    justify-content: flex-end; /* Empuja el botón a la derecha */
+    margin-top: 20px;
+}
