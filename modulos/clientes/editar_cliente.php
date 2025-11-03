@@ -15,7 +15,7 @@ $stmt->execute([':id'=>$id]);
 $cliente = $stmt->fetch();
 if (!$cliente) die("Cliente no encontrado.");
 
-// Procesar actualización
+// Procesar actualización de datos 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre = $_POST['nombre'];
     $apellido = $_POST['apellido'];
