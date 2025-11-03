@@ -21,32 +21,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: clientes.php");
         exit;
     } else {
-        $error = "Error al eliminar cliente.";
+        echo "Error al eliminar cliente.";
     }
 }
 ?>
 
-<div class="container">
-    <h1>Eliminar Cliente</h1>
-    <?php if(isset($error)) echo "<div class='mensaje error'>{$error}</div>"; ?>
-    <p>¿Seguro que deseas eliminar al cliente <strong><?= htmlspecialchars($cliente['nombre'] . " " . $cliente['apellido']) ?></strong>?</p>
+<div class="container form-container">
+    <h1 style="color:#dc2626;">Eliminar Cliente</h1>
+    <p>Seguro que deseas eliminar al cliente <strong><?= htmlspecialchars($cliente['nombre'] . " " . $cliente['apellido']) ?></strong>?</p>
 
     <form method="POST" style="display:inline;">
-        <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+        <button type="submit" class="btn btn-delete">Si, eliminar</button>
     </form>
-    <a href="clientes.php" class="btn btn-secondary">Cancelar</a>
+    <a href="clientes.php" class="btn btn-edit">Cancelar</a>
 </div>
-
-<style>
-.container { max-width:500px; margin:80px auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.1); text-align:center; }
-h1 { color:#dc2626; margin-bottom:20px; }
-p { margin-bottom:20px; }
-.btn { padding:10px 20px; font-size:16px; margin:5px; border:none; border-radius:4px; cursor:pointer; text-decoration:none; display:inline-block; }
-.btn-danger { background:#dc2626; color:white; }
-.btn-danger:hover { background:#b91c1c; }
-.btn-secondary { background:#6b7280; color:white; }
-.btn-secondary:hover { background:#4b5563; }
-.mensaje.error { padding:10px; background:#fee2e2; color:#991b1b; border-radius:4px; margin-bottom:15px; }
-</style>
 
 <?php include $base_path . 'includes/footer.php'; ?>

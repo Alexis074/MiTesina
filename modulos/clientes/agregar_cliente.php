@@ -4,22 +4,21 @@ include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/header.php';
 
 $mensaje = "";
-$nombre = $apellido = $ruc = $telefono = $direccion = $email = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nombre = trim($_POST['nombre']);
-    $apellido = trim($_POST['apellido']);
-    $ruc = trim($_POST['ruc']);
-    $telefono = trim($_POST['telefono']);
-    $direccion = trim($_POST['direccion']);
-    $email = trim($_POST['email']);
+    $nombre = $_POST['nombre'];
+    $apellido = $_POST['apellido'];
+    $ruc = $_POST['ruc'];
+    $telefono = $_POST['telefono'];
+    $direccion = $_POST['direccion'];
+    $email = $_POST['email'];
     $created_at = date("Y-m-d H:i:s");
 
     if (!preg_match("/^[A-Za-z\s]+$/", $nombre) || !preg_match("/^[A-Za-z\s]+$/", $apellido)) {
         $mensaje = "Error: El nombre y apellido solo pueden contener letras y espacios.";
     } elseif (!preg_match("/^[0-9\-]+$/", $ruc)) {
         $mensaje = "Error: El RUC solo puede contener números y guion.";
-    } elseif (!preg_match("/^[0-9]+$/", $telefono) && $telefono != "") {
+    } elseif (!preg_match("/^[0-9]+$/", $telefono)) {
         $mensaje = "Error: El teléfono solo puede contener números.";
     } else {
         $sql = "INSERT INTO clientes (nombre, apellido, ruc, telefono, direccion, email, created_at)
@@ -35,7 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':created_at'=>$created_at
         ])){
             $mensaje = "Cliente agregado correctamente.";
-            // Limpiar campos
             $nombre = $apellido = $ruc = $telefono = $direccion = $email = "";
         } else {
             $mensaje = "Error al agregar cliente.";
@@ -44,35 +42,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<div class="container">
+<div class="container form-container">
     <h1>Agregar Cliente</h1>
 
     <?php if($mensaje != ""): ?>
-        <div class="mensaje <?= strpos($mensaje,'Error') === false ? 'exito' : 'error' ?>">
-            <?= $mensaje; ?>
-        </div>
+        <div class="mensaje <?= strpos($mensaje,'Error') === false ? 'exito' : 'error' ?>"><?= $mensaje; ?></div>
     <?php endif; ?>
 
     <form method="POST">
         <label>Nombre:</label>
-        <input type="text" name="nombre" value="<?= htmlspecialchars($nombre) ?>" required>
+        <input type="text" name="nombre" value="<?= isset($nombre) ? htmlspecialchars($nombre) : '' ?>" required>
 
         <label>Apellido:</label>
-        <input type="text" name="apellido" value="<?= htmlspecialchars($apellido) ?>" required>
+        <input type="text" name="apellido" value="<?= isset($apellido) ? htmlspecialchars($apellido) : '' ?>" required>
 
         <label>RUC:</label>
-        <input type="text" name="ruc" value="<?= htmlspecialchars($ruc) ?>" required>
+        <input type="text" name="ruc" value="<?= isset($ruc) ? htmlspecialchars($ruc) : '' ?>" required>
 
         <label>Teléfono:</label>
-        <input type="text" name="telefono" value="<?= htmlspecialchars($telefono) ?>">
+        <input type="text" name="telefono" value="<?= isset($telefono) ? htmlspecialchars($telefono) : '' ?>">
 
         <label>Dirección:</label>
-        <input type="text" name="direccion" value="<?= htmlspecialchars($direccion) ?>">
+        <input type="text" name="direccion" value="<?= isset($direccion) ? htmlspecialchars($direccion) : '' ?>">
 
         <label>Email:</label>
-        <input type="email" name="email" value="<?= htmlspecialchars($email) ?>">
+        <input type="email" name="email" value="<?= isset($email) ? htmlspecialchars($email) : '' ?>">
 
-        <button type="submit">Agregar Cliente</button>
+        <button type="submit" class="btn btn-edit">Agregar Cliente</button>
     </form>
 </div>
 

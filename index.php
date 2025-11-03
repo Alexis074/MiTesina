@@ -19,7 +19,7 @@
       position: absolute;
       top: 0; left: 0;
       width: 100%;
-      height: 100%;
+      height: 80%;
       background-image: url('img/logo3.png');
       background-repeat: no-repeat;
       background-position: center;
@@ -27,9 +27,9 @@
       opacity: 0.1;
       z-index: 0;
     }
-    .welcome-text { position: relative; z-index: 1; color: #1e293b; }
-    .welcome-text h1 { font-size: 36px; margin-bottom: 20px; }
-    .welcome-text p { font-size: 18px; color: #475569; }
+    .welcome-text { position: relative ; z-index: 1; color: #1e293b; }
+    .welcome-text h1 { font-size: 60px; margin-bottom: 0px; }
+    .welcome-text p { font-size: 30px; color: #475569; }
   </style>
 </head>
 <body>
