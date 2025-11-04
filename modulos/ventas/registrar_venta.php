@@ -58,12 +58,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
     }
 
+    // Generar número de factura único basado en el ID máximo (incluye facturas anuladas)
+    // Esto garantiza que los números de factura nunca se reutilicen, incluso si hay facturas anuladas
+    // El ID es AUTO_INCREMENT, por lo que siempre será único y nunca se reutilizará
     $stmt_num = $pdo->query("SELECT MAX(id) as max_id FROM cabecera_factura_ventas");
     $row = $stmt_num->fetch(PDO::FETCH_ASSOC);
     $next_id = ($row && $row['max_id']) ? ((int)$row['max_id'] + 1) : 1;
     $numero_factura = sprintf('%03d-%03d-%06d',$serie_1,$serie_2,$next_id);
+    
+    // Verificar que el número de factura no exista (seguridad adicional)
+    // Esto no debería ocurrir, pero es una medida de seguridad
+    $stmt_verificar = $pdo->prepare("SELECT id FROM cabecera_factura_ventas WHERE numero_factura = ?");
+    $stmt_verificar->execute(array($numero_factura));
+    if ($stmt_verificar->fetch()) {
+        // Si por alguna razón el número ya existe, usar el siguiente ID
+        $next_id++;
+        $numero_factura = sprintf('%03d-%03d-%06d',$serie_1,$serie_2,$next_id);
+    }
 
-    $timbrado = '12345678';
+    // Generar timbrado único auto-incremental desde un número base
+    // El número base es 4571575, y cada factura tendrá un timbrado único incremental
+    $timbrado_base = 4571575;
+    
+    // Obtener el timbrado máximo existente (incluye facturas anuladas para garantizar unicidad)
+    // Compatible con MySQL 5.6: obtenemos todos los timbrados numéricos y calculamos el máximo en PHP
+    $stmt_timbrado = $pdo->query("SELECT timbrado FROM cabecera_factura_ventas WHERE timbrado IS NOT NULL");
+    $timbrados = $stmt_timbrado->fetchAll(PDO::FETCH_COLUMN);
+    
+    $max_timbrado = $timbrado_base - 1;
+    foreach ($timbrados as $t) {
+        // Verificar si es numérico
+        if (is_numeric($t)) {
+            $t_num = (int)$t;
+            if ($t_num > $max_timbrado) {
+                $max_timbrado = $t_num;
+            }
+        }
+    }
+    
+    // Si hay timbrados existentes mayores o iguales al base, usar el máximo + 1, sino usar el número base
+    if ($max_timbrado >= $timbrado_base) {
+        $next_timbrado = $max_timbrado + 1;
+    } else {
+        $next_timbrado = $timbrado_base;
+    }
+    
+    // Verificar que el timbrado no exista (seguridad adicional)
+    $stmt_verificar_timbrado = $pdo->prepare("SELECT id FROM cabecera_factura_ventas WHERE timbrado = ?");
+    $stmt_verificar_timbrado->execute(array($next_timbrado));
+    if ($stmt_verificar_timbrado->fetch()) {
+        // Si por alguna razón el timbrado ya existe, usar el siguiente
+        $next_timbrado++;
+    }
+    
+    $timbrado = (string)$next_timbrado;
     $inicio_vigencia = '2025-01-01';
     $fin_vigencia = '2025-12-31';
 
@@ -298,3 +346,4 @@ document.querySelectorAll('.producto_select').forEach(sel=>{
 </script>
 </body>
 </html>
+

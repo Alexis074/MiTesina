@@ -75,19 +75,7 @@ if(!isset($_GET['id'])) {
 
 $factura_id = (int)$_GET['id'];
 
-// Datos de la empresa
-$empresa = array(
-    'nombre' => 'Repuestos Doble A',
-    'ruc' => '80012345-6',
-    'direccion' => 'Av. Principal 123, Asunción, Paraguay',
-    'telefono' => '(021) 123-4567',
-    'email' => 'contacto@repuestosdoblea.com',
-    'timbrado' => '12345678',
-    'inicio_vigencia' => '01/01/2025',
-    'fin_vigencia' => '31/12/2025'
-);
-
-// Obtener cabecera de factura
+// Obtener cabecera de factura (incluye timbrado y fechas de vigencia)
 $stmt_cab = $pdo->prepare("SELECT fv.*, c.nombre, c.apellido, c.ruc, c.direccion, c.telefono  
                            FROM cabecera_factura_ventas fv
                            JOIN clientes c ON fv.cliente_id = c.id
@@ -99,6 +87,18 @@ if(!$factura) {
     echo "Factura no encontrada.";
     exit;
 }
+
+// Datos de la empresa (usar timbrado y fechas de vigencia de la factura)
+$empresa = array(
+    'nombre' => 'Repuestos Doble A',
+    'ruc' => '80012345-6',
+    'direccion' => 'Av. Principal 123, Asunción, Paraguay',
+    'telefono' => '(021) 123-4567',
+    'email' => 'contacto@repuestosdoblea.com',
+    'timbrado' => isset($factura['timbrado']) && !empty($factura['timbrado']) ? $factura['timbrado'] : '12345678',
+    'inicio_vigencia' => isset($factura['inicio_vigencia']) && !empty($factura['inicio_vigencia']) ? date('d/m/Y', strtotime($factura['inicio_vigencia'])) : '01/01/2025',
+    'fin_vigencia' => isset($factura['fin_vigencia']) && !empty($factura['fin_vigencia']) ? date('d/m/Y', strtotime($factura['fin_vigencia'])) : '31/12/2025'
+);
 
 // Obtener detalle de productos
 $stmt_det = $pdo->prepare("SELECT d.*, p.nombre 
@@ -116,7 +116,7 @@ $detalle = $stmt_det->fetchAll(PDO::FETCH_ASSOC);
 <title>Factura N° <?php echo htmlspecialchars($factura['numero_factura']); ?></title>
 <link rel="stylesheet" href="/repuestos/style.css">
 <style>
-body { font-family: Arial, sans-serif; margin:0; padding:0; background: #f7f7f7; }
+body { font-family: Arial, sans-serif; margin: 50px; padding:0; background: #f7f7f7; }
 .factura-container { width: 800px; margin: 20px auto; background: white; padding: 30px; border: 1px solid #ccc; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
 .encabezado { display: flex; justify-content: space-between; align-items: center; }
 .encabezado img { height: 80px; }
