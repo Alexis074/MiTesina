@@ -2,6 +2,11 @@
 $base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/session.php';
+include $base_path . 'includes/auditoria.php';
+
+// Registrar en auditoría antes de destruir sesión
+$usuario_nombre = isset($_SESSION['usuario']) ? $_SESSION['usuario'] : 'Desconocido';
+registrarAuditoria('logout', 'sistema', 'Usuario ' . $usuario_nombre . ' cerró sesión');
 
 // Registrar cierre de sesión
 if (isset($_SESSION['sesion_id'])) {

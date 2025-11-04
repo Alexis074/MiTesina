@@ -32,6 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Insertar usuario
             $stmt = $pdo->prepare("INSERT INTO usuarios (usuario, password, nombre, rol, activo) VALUES (?, ?, ?, ?, ?)");
             if ($stmt->execute(array($usuario, $password_hash, $nombre, $rol, $activo))) {
+                // Registrar en auditoría
+                include $base_path . 'includes/auditoria.php';
+                registrarAuditoria('crear', 'usuarios', 'Usuario ' . $usuario . ' creado. Rol: ' . $rol);
+                
                 $mensaje = 'Usuario creado correctamente.';
             } else {
                 $error = 'Error al crear el usuario.';
@@ -73,8 +77,8 @@ $roles = array('Administrador', 'Vendedor');
                 <?php endforeach; ?>
             </select>
             
-            <label>
-                <input type="checkbox" name="activo" checked> Usuario Activo
+            <label class="checkbox-label">
+                Usuario Activo <input type="checkbox" name="activo" checked>
             </label>
             
             <div class="form-actions">

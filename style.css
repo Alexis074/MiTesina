@@ -94,6 +94,14 @@ form label {
     margin:10px 0 5px;
     font-weight: bold;
 }
+/* Estilo para labels que contienen checkbox - alineación horizontal */
+form label.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: normal;
+    margin: 15px 0;
+}
 form input, form button {
     width:100%;
     padding:10px;
@@ -102,6 +110,15 @@ form input, form button {
     border:1px solid #ccc;
     font-size:16px;
     box-sizing: border-box;
+}
+/* Checkbox dentro de label - sin ancho completo */
+form label.checkbox-label input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    margin-bottom: 0;
+    cursor: pointer;
+    flex-shrink: 0;
 }
 form button {
     background:#2563eb;
@@ -148,17 +165,11 @@ table.crud-table th, table.crud-table td {
     text-overflow: ellipsis;
 }
 
-/* Anchos proporcionales de columnas */
-table.crud-table th:nth-child(1), table.crud-table td:nth-child(1) { width: 5%; }   /* ID */
-table.crud-table th:nth-child(2), table.crud-table td:nth-child(2) { width: 15%; } /* Nombre */
-table.crud-table th:nth-child(3), table.crud-table td:nth-child(3) { width: 15%; } /* Apellido */
-table.crud-table th:nth-child(4), table.crud-table td:nth-child(4) { width: 10%; } /* RUC */
-table.crud-table th:nth-child(5), table.crud-table td:nth-child(5) { width: 10%; } /* Teléfono */
-table.crud-table th:nth-child(6), table.crud-table td:nth-child(6) { width: 20%; } /* Dirección */
-table.crud-table th:nth-child(7), table.crud-table td:nth-child(7) { width: 15%; } /* Email */
-table.crud-table th:nth-child(8), table.crud-table td:nth-child(8) {
-    width: auto;       /* Acciones */
-    min-width: 100px; /* Espacio mínimo */
+/* Anchos proporcionales de columnas - Acciones siempre es la última columna */
+table.crud-table th:last-child, table.crud-table td:last-child {
+    width: 120px;     /* Ancho fijo para columna Acciones */
+    min-width: 120px;
+    max-width: 120px;
 }
 
 /* Estilo de cabecera y filas */
@@ -170,6 +181,18 @@ table.crud-table tr:nth-child(even) { background:#f9f9f9; }
 table.crud-table tr:hover { background:#e0f2fe; }
 table.crud-table tr.low-stock { background-color: #fde68a; }
 table.crud-table tr.low-stock:hover { background-color: #fcd34d; }
+/* Facturas anuladas - estilo opaco */
+table.crud-table tr.factura-anulada {
+    background-color: #f3f4f6 !important;
+    opacity: 0.6;
+}
+table.crud-table tr.factura-anulada:hover {
+    background-color: #e5e7eb !important;
+    opacity: 0.7;
+}
+table.crud-table tr.factura-anulada td {
+    color: #6b7280;
+}
 
 /* ==================== Botones con iconos y tooltips ==================== */
 .acciones {

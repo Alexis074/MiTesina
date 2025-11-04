@@ -48,6 +48,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'total' => $total_compra
     ]);
     $compra_id = $pdo->lastInsertId();
+    
+    // Registrar en auditoría
+    include $base_path . 'includes/auditoria.php';
+    $stmt_prov = $pdo->prepare("SELECT empresa FROM proveedores WHERE id = ?");
+    $stmt_prov->execute([$proveedor_id]);
+    $proveedor = $stmt_prov->fetch();
+    $nombre_proveedor = $proveedor ? $proveedor['empresa'] : 'ID ' . $proveedor_id;
+    registrarAuditoria('crear', 'compras', 'Compra #' . $compra_id . ' creada. Proveedor: ' . $nombre_proveedor . ', Total: ' . number_format($total_compra,0,',','.'));
 
     // Insertar detalles y actualizar stock
     for ($i = 0; $i < count($productos_ids); $i++) {

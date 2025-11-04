@@ -37,6 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt_sesion->execute(array($user['id'], $_SERVER['REMOTE_ADDR']));
                 $_SESSION['sesion_id'] = $pdo->lastInsertId();
                 
+                // Registrar en auditoría
+                include $base_path . 'includes/auditoria.php';
+                registrarAuditoria('login', 'sistema', 'Usuario ' . $user['usuario'] . ' inició sesión');
+                
                 header('Location: /repuestos/index.php');
                 exit();
             } else {

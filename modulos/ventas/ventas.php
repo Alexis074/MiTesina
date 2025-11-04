@@ -110,6 +110,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ));
     }
 
+    // Registrar en auditoría
+    include $base_path . 'includes/auditoria.php';
+    registrarAuditoria('crear', 'ventas', 'Factura #' . $numero_factura . ' creada. Cliente ID: ' . $cliente_id . ', Total: ' . number_format($total_venta,0,',','.'));
+    
     $mensaje = "Venta registrada. Factura: $numero_factura Total: ".number_format($total_venta,0,',','.');
 }
 ?>

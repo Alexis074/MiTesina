@@ -7,7 +7,7 @@ requerirLogin();
 requerirPermiso('facturacion', 'ver');
 include $base_path . 'includes/header.php';
 
-// Obtener facturas de venta
+// Obtener facturas de venta (incluyendo anuladas)
 $stmt_ventas = $pdo->query("SELECT * FROM cabecera_factura_ventas ORDER BY fecha_hora DESC LIMIT 50");
 $facturas_ventas = $stmt_ventas->fetchAll();
 
@@ -53,22 +53,41 @@ try {
                 $cliente = $stmt_cliente->fetch();
                 $nombre_cliente = $cliente ? $cliente['nombre'] . ' ' . $cliente['apellido'] : 'N/A';
 
-                echo '<tr>';
-                echo '<td>'.htmlspecialchars($fila['numero_factura']).'</td>';
+                $anulada = isset($fila['anulada']) && $fila['anulada'] == 1;
+                $clase_fila = $anulada ? 'factura-anulada' : '';
+                echo '<tr class="' . $clase_fila . '">';
+                echo '<td>';
+                if ($anulada) {
+                    echo '<span style="text-decoration: line-through; opacity: 0.6;">' . htmlspecialchars($fila['numero_factura']) . '</span> ';
+                    echo '<span style="background: #dc2626; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">ANULADA</span>';
+                } else {
+                    echo htmlspecialchars($fila['numero_factura']);
+                }
+                echo '</td>';
                 echo '<td>'.htmlspecialchars($nombre_cliente).'</td>';
                 echo '<td>'.htmlspecialchars($fila['fecha_hora']).'</td>';
                 echo '<td>'.number_format($fila['monto_total'],0,',','.').'</td>';
-                echo '<td>'.htmlspecialchars($fila['condicion_venta']).'</td>';
+                echo '<td>';
+                if ($anulada) {
+                    echo '<span style="text-decoration: line-through; opacity: 0.6;">' . htmlspecialchars($fila['condicion_venta']) . '</span>';
+                } else {
+                    echo htmlspecialchars($fila['condicion_venta']);
+                }
+                echo '</td>';
                 echo '<td class="acciones">';
                 echo '<a href="/repuestos/modulos/ventas/ver_factura.php?id='.htmlspecialchars($fila['id']).'" class="btn btn-edit" data-tooltip="Ver" target="_blank">
                         <i class="fas fa-eye"></i>
                         </a>';
-                echo '<a href="/repuestos/modulos/ventas/imprimir_factura.php?id='.htmlspecialchars($fila['id']).'" class="btn btn-edit" data-tooltip="Imprimir" target="_blank">
-                        <i class="fas fa-print"></i>
-                        </a>';
-                echo '<a href="#" class="btn btn-delete" data-tooltip="Anular" onclick="return confirm(\'¿Seguro que deseas anular esta factura?\')">
-                        <i class="fas fa-ban"></i>
-                        </a>';
+                if (!$anulada) {
+                    echo '<a href="/repuestos/modulos/ventas/imprimir_factura.php?id='.htmlspecialchars($fila['id']).'" class="btn btn-edit" data-tooltip="Imprimir" target="_blank">
+                            <i class="fas fa-print"></i>
+                            </a>';
+                    echo '<a href="anular_factura.php?id='.htmlspecialchars($fila['id']).'" class="btn btn-delete" data-tooltip="Anular">
+                            <i class="fas fa-ban"></i>
+                            </a>';
+                } else {
+                    echo '<span style="color: #dc2626; font-size: 12px; padding: 5px;">Anulada</span>';
+                }
                 echo '</td>';
                 echo '</tr>';
             }

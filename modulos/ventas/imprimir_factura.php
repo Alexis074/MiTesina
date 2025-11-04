@@ -124,7 +124,7 @@ body { font-family: Arial, sans-serif; margin:0; padding:0; background: #f7f7f7;
 .titulo { text-align:center; background:#0b3d91; color:white; padding:5px 0; margin-top:10px; font-size:18px; border-radius:4px; }
 .datos-cliente { display:flex; justify-content:space-between; margin-top:15px; font-size:13px; }
 .factura-table { width:100%; border-collapse:collapse; margin-top:15px; font-size:13px; }
-.factura-table th, .factura-table td { border:1px solid #000; padding:6px; text-align:center; }
+.factura-table th, .factura-table td { border:1px solid #000; padding:6px; text-align:center; color: #000}
 .factura-table th { background:#e8e8e8; }
 tfoot td { font-weight:bold; text-align:left; }
 .timbrado { margin-top:10px; font-size:12px; text-align:left; }
