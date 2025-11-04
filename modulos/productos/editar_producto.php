@@ -77,6 +77,9 @@ if (isset($_POST['actualizar'])) {
 <body>
 
 <div class="container form-container">
+    <div class="form-actions-right" style="margin-bottom: 20px;">
+        <a href="<?= $base_url ?>modulos/productos/productos.php" class="btn-cancelar"><i class="fas fa-arrow-left"></i> Volver</a>
+    </div>
     <h1>Editar Producto</h1>
     <?php if(isset($mensaje)): ?>
         <div class="mensaje <?= $mensaje_tipo ?>"><?= $mensaje; ?></div>

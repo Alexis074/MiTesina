@@ -14,6 +14,10 @@ $factura_id = 0;
 $clientes = $pdo->query("SELECT * FROM clientes ORDER BY nombre ASC")->fetchAll(PDO::FETCH_ASSOC);
 $productos = $pdo->query("SELECT * FROM productos ORDER BY nombre ASC")->fetchAll(PDO::FETCH_ASSOC);
 
+// Verificar si hay caja abierta
+$stmtCaja = $pdo->query("SELECT * FROM caja WHERE estado='Abierta' ORDER BY id DESC LIMIT 1");
+$caja_abierta = $stmtCaja->fetch();
+
 // Obtener ventas recientes (últimas 20, excluyendo anuladas)
 $stmt_ventas_recientes = $pdo->query("SELECT fv.*, c.nombre, c.apellido 
                                       FROM cabecera_factura_ventas fv
@@ -38,6 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (empty($carrito) || !is_array($carrito)) {
         $mensaje = "Error: El carrito está vacío.";
+    } elseif (!$caja_abierta) {
+        $mensaje = "Error: Debe abrir la caja antes de realizar una venta.";
     } else {
         $fecha = date("Y-m-d H:i:s");
         $total_venta = 0;
@@ -193,16 +199,21 @@ if (isset($_GET['success']) && isset($_GET['factura_id'])) {
     <div class="venta-rapida-container">
         <form id="form_agregar_producto" class="venta-rapida-form">
             <div class="form-row-horizontal">
-                <div class="form-group-horizontal">
+                <div class="form-group-horizontal" style="flex: 1 1 200px;">
                     <label>Cliente:</label>
-                    <select id="select_cliente" class="form-select-horizontal" required>
-                        <option value="">-- Seleccione --</option>
-                        <?php foreach($clientes as $c): ?>
-                            <option value="<?= $c['id'] ?>" data-ruc="<?= htmlspecialchars($c['ruc']) ?>" data-nombre="<?= htmlspecialchars($c['nombre'].' '.$c['apellido']) ?>">
-                                <?= htmlspecialchars($c['nombre'].' '.$c['apellido']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <div style="display: flex; gap: 5px; align-items: flex-end;">
+                        <select id="select_cliente" class="form-select-horizontal" required style="flex: 1;">
+                            <option value="">-- Seleccione --</option>
+                            <?php foreach($clientes as $c): ?>
+                                <option value="<?= $c['id'] ?>" data-ruc="<?= htmlspecialchars($c['ruc']) ?>" data-nombre="<?= htmlspecialchars($c['nombre'].' '.$c['apellido']) ?>">
+                                    <?= htmlspecialchars($c['nombre'].' '.$c['apellido']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <a href="/repuestos/modulos/clientes/agregar_cliente.php" class="btn-agregar-carrito" style="width: auto; padding: 0 15px; flex-shrink: 0; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-user-plus"></i> Agregar
+                        </a>
+                    </div>
                 </div>
                 
                 <div class="form-group-horizontal">
@@ -753,6 +764,17 @@ function verificarCarrito() {
 // Prevenir envío del formulario de agregar
 document.getElementById('form_agregar_producto').addEventListener('submit', function(e) {
     e.preventDefault();
+});
+
+// Validar caja antes de confirmar venta
+var cajaAbierta = <?php echo $caja_abierta ? 'true' : 'false'; ?>;
+document.getElementById('form_venta_final').addEventListener('submit', function(e) {
+    if (!cajaAbierta) {
+        e.preventDefault();
+        alert('ERROR: Debe abrir la caja antes de realizar una venta.\n\nPor favor, diríjase al módulo de Caja y ábrala primero.');
+        window.location.href = '/repuestos/modulos/caja/caja.php';
+        return false;
+    }
 });
 
 // Inicializar

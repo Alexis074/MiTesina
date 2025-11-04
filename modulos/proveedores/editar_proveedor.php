@@ -80,6 +80,11 @@ button:hover { background:#1e40af; }
 
 <div class="container">
 <h1>Editar Proveedor</h1>
+
+<div style="margin-bottom: 20px; text-align: right;">
+    <a href="/repuestos/modulos/proveedores/proveedores.php" class="btn-cancelar" style="display: inline-block; padding: 8px 15px; background: #6b7280; color: white; text-decoration: none; border-radius: 4px;"><i class="fas fa-arrow-left"></i> Volver</a>
+</div>
+
 <?php if($mensaje != ""): ?>
     <div class="mensaje <?= strpos($mensaje,'Error') === false ? 'exito' : 'error' ?>"><?= $mensaje; ?></div>
 <?php endif; ?>

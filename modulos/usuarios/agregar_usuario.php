@@ -51,6 +51,10 @@ $roles = array('Administrador', 'Vendedor');
 <div class="container">
     <h1>Agregar Usuario</h1>
     
+    <div class="form-actions-right" style="margin-bottom: 20px;">
+        <a href="/repuestos/modulos/usuarios/usuarios.php" class="btn-cancelar"><i class="fas fa-arrow-left"></i> Volver</a>
+    </div>
+    
     <?php if ($mensaje): ?>
         <div class="mensaje exito"><?php echo htmlspecialchars($mensaje); ?></div>
     <?php endif; ?>

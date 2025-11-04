@@ -53,6 +53,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="container form-container">
     <h1>Editar Cliente</h1>
+    
+    <div class="form-actions-right" style="margin-bottom: 20px;">
+        <a href="/repuestos/modulos/clientes/clientes.php" class="btn-cancelar"><i class="fas fa-arrow-left"></i> Volver</a>
+    </div>
+    
     <?php if($mensaje != ""): ?>
         <div class="mensaje <?= strpos($mensaje,'Error') === false ? 'exito' : 'error' ?>"><?= $mensaje ?></div>
     <?php endif; ?>

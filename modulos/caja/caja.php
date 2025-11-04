@@ -7,51 +7,49 @@ requerirLogin();
 requerirPermiso('caja', 'ver');
 include $base_path . 'includes/header.php';
 
-$mensaje = "";
-
 // Obtener la caja abierta
 $stmtCaja = $pdo->query("SELECT * FROM caja WHERE estado='Abierta' ORDER BY id DESC LIMIT 1");
 $caja = $stmtCaja->fetch();
 
-// Guardar movimiento
-if(isset($_POST['guardar_movimiento']) && $caja){
-    $tipo = $_POST['tipo'];
-    $descripcion = $_POST['descripcion'];
-    $monto = $_POST['monto'];
-    $fecha = date("Y-m-d H:i:s");
-
-    $sql = "INSERT INTO caja_movimientos (caja_id, fecha, tipo, concepto, monto, created_at) 
-            VALUES (:caja_id, :fecha, :tipo, :concepto, :monto, :created_at)";
-    $stmt = $pdo->prepare($sql);
-    if($stmt->execute([
-        'caja_id' => $caja['id'],
-        'fecha' => $fecha,
-        'tipo' => $tipo,
-        'concepto' => $descripcion,
-        'monto' => $monto,
-        'created_at' => $fecha
-    ])){
-        $mensaje = "Movimiento registrado correctamente.";
-    } else {
-        $mensaje = "Error al registrar movimiento.";
-    }
-}
-
 // Obtener movimientos recientes si hay caja abierta
 $movimientos = [];
+$movimientos_combinados = [];
+
 if($caja){
-    $stmtMov = $pdo->prepare("SELECT * FROM caja_movimientos WHERE caja_id=? ORDER BY fecha DESC");
+    // Movimientos manuales
+    $stmtMov = $pdo->prepare("SELECT id, fecha, tipo, concepto as descripcion, monto, 'manual' as origen FROM caja_movimientos WHERE caja_id=? ORDER BY fecha DESC");
     $stmtMov->execute([$caja['id']]);
     $movimientos = $stmtMov->fetchAll();
+    
+    // Ventas (ingresos) - excluyendo anuladas
+    $fecha_apertura = $caja['fecha'];
+    $stmtVentas = $pdo->prepare("SELECT id, fecha_hora as fecha, 'Ingreso' as tipo, CONCAT('Venta - Factura ', numero_factura) as descripcion, monto_total as monto, 'venta' as origen 
+                                 FROM cabecera_factura_ventas 
+                                 WHERE fecha_hora >= ? AND (anulada = 0 OR anulada IS NULL)
+                                 ORDER BY fecha_hora DESC");
+    $stmtVentas->execute([$fecha_apertura]);
+    $ventas = $stmtVentas->fetchAll();
+    
+    // Compras (egresos)
+    $stmtCompras = $pdo->prepare("SELECT c.id, c.fecha, 'Egreso' as tipo, CONCAT('Compra - ID ', c.id, ' - Proveedor ID ', c.proveedor_id) as descripcion, c.total as monto, 'compra' as origen 
+                                  FROM compras c 
+                                  WHERE c.fecha >= ?
+                                  ORDER BY c.fecha DESC");
+    $stmtCompras->execute([$fecha_apertura]);
+    $compras = $stmtCompras->fetchAll();
+    
+    // Combinar todos los movimientos
+    $movimientos_combinados = array_merge($movimientos, $ventas, $compras);
+    
+    // Ordenar por fecha descendente
+    usort($movimientos_combinados, function($a, $b) {
+        return strtotime($b['fecha']) - strtotime($a['fecha']);
+    });
 }
 ?>
 
 <div class="container tabla-responsive">
     <h1>Caja</h1>
-
-    <?php if($mensaje != ""): ?>
-        <div class="mensaje <?= strpos($mensaje,'Error') === false ? 'exito' : 'error' ?>"><?= $mensaje; ?></div>
-    <?php endif; ?>
 
     <?php if(!$caja): ?>
         <div class="form-actions-right">
@@ -64,27 +62,11 @@ if($caja){
             <a href="exportar_pdf_caja.php?id=<?= $caja['id'] ?>" class="btn-export" target="_blank"><i class="fas fa-file-pdf"></i> Exportar PDF</a>
         </div>
 
-        <h2>Registrar Movimiento</h2>
-        <div class="form-container">
-            <form method="POST">
-                <label>Tipo:</label>
-                <select name="tipo" required>
-                    <option value="Ingreso">Ingreso</option>
-                    <option value="Egreso">Egreso</option>
-                </select>
-
-                <label>Descripción:</label>
-                <input type="text" name="descripcion" required>
-
-                <label>Monto:</label>
-                <input type="number" step="0.01" name="monto" required>
-
-                <button type="submit" name="guardar_movimiento">Registrar</button>
-            </form>
-        </div>
-
         <br><br>
-        <h2>Movimientos Recientes</h2>
+        <h2>Registros de Caja (Ventas y Compras Automáticas)</h2>
+        <p style="color: #6b7280; margin-bottom: 20px;">
+            <i class="fas fa-info-circle"></i> Los movimientos se registran automáticamente al realizar ventas o compras.
+        </p>
         <table class="crud-table">
             <thead>
                 <tr>
@@ -96,18 +78,29 @@ if($caja){
                 </tr>
             </thead>
             <tbody>
-            <?php if($movimientos): ?>
-                <?php foreach($movimientos as $fila): ?>
+            <?php if(!empty($movimientos_combinados)): ?>
+                <?php foreach($movimientos_combinados as $fila): ?>
                     <tr>
                         <td><?= htmlspecialchars($fila['id']) ?></td>
-                        <td><?= htmlspecialchars($fila['tipo']) ?></td>
-                        <td><?= htmlspecialchars($fila['concepto']) ?></td>
-                        <td><?= number_format($fila['monto'],2,',','.') ?></td>
-                        <td><?= htmlspecialchars($fila['fecha']) ?></td>
+                        <td>
+                            <span style="padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;
+                                <?php if($fila['tipo'] == 'Ingreso'): ?>
+                                    background: #10b981; color: white;
+                                <?php else: ?>
+                                    background: #ef4444; color: white;
+                                <?php endif; ?>">
+                                <?= htmlspecialchars($fila['tipo']) ?>
+                            </span>
+                        </td>
+                        <td><?= htmlspecialchars($fila['descripcion']) ?></td>
+                        <td style="font-weight: bold; <?= $fila['tipo'] == 'Ingreso' ? 'color: #10b981;' : 'color: #ef4444;' ?>">
+                            <?= ($fila['tipo'] == 'Ingreso' ? '+' : '-') ?> <?= number_format($fila['monto'],0,',','.') ?> Gs
+                        </td>
+                        <td><?= date('d/m/Y H:i', strtotime($fila['fecha'])) ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>
-                <tr><td colspan="5">No hay movimientos registrados.</td></tr>
+                <tr><td colspan="5">No hay registros en esta caja.</td></tr>
             <?php endif; ?>
             </tbody>
         </table>

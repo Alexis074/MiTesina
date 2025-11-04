@@ -35,6 +35,19 @@ $stmt_compras_recientes = $pdo->query("SELECT c.*, p.empresa as nombre_proveedor
                                        LIMIT 20");
 $compras_recientes = $stmt_compras_recientes->fetchAll();
 
+// Obtener facturas de compras recientes (últimas 20)
+$facturas_compras_recientes = [];
+try {
+    $stmt_facturas_compras = $pdo->query("SELECT fc.*, p.empresa as nombre_proveedor 
+                                          FROM cabecera_factura_compras fc
+                                          LEFT JOIN proveedores p ON fc.proveedor_id = p.id
+                                          ORDER BY fc.fecha_hora DESC 
+                                          LIMIT 20");
+    $facturas_compras_recientes = $stmt_facturas_compras->fetchAll();
+} catch (Exception $e) {
+    // Tabla no existe aún
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $proveedor_id = (int)$_POST['proveedor_id'];
     
@@ -63,12 +76,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
         $compra_id = $pdo->lastInsertId();
         
-        // Registrar en auditoría
-        include $base_path . 'includes/auditoria.php';
-        $stmt_prov = $pdo->prepare("SELECT empresa FROM proveedores WHERE id = ?");
+        // Obtener datos del proveedor
+        $stmt_prov = $pdo->prepare("SELECT * FROM proveedores WHERE id = ?");
         $stmt_prov->execute([$proveedor_id]);
         $proveedor = $stmt_prov->fetch();
         $nombre_proveedor = $proveedor ? $proveedor['empresa'] : 'ID ' . $proveedor_id;
+        
+        // Generar número de factura único para compra
+        $stmt_num = $pdo->query("SELECT MAX(id) as max_id FROM cabecera_factura_compras");
+        $row = $stmt_num->fetch(PDO::FETCH_ASSOC);
+        $next_id = ($row && $row['max_id']) ? ((int)$row['max_id'] + 1) : 1;
+        $numero_factura = 'FC-' . str_pad($next_id, 6, '0', STR_PAD_LEFT);
+        
+        // Verificar que el número de factura no exista
+        $stmt_verificar = $pdo->prepare("SELECT id FROM cabecera_factura_compras WHERE numero_factura = ?");
+        $stmt_verificar->execute(array($numero_factura));
+        if ($stmt_verificar->fetch()) {
+            $next_id++;
+            $numero_factura = 'FC-' . str_pad($next_id, 6, '0', STR_PAD_LEFT);
+        }
+        
+        // Obtener datos de condición de compra y forma de pago
+        $condicion_compra = isset($_POST['condicion_compra']) ? $_POST['condicion_compra'] : 'Contado';
+        $forma_pago = isset($_POST['forma_pago']) ? $_POST['forma_pago'] : 'Efectivo';
+        $numero_factura_proveedor = isset($_POST['numero_factura_proveedor']) ? $_POST['numero_factura_proveedor'] : '';
+        $timbrado_proveedor = isset($_POST['timbrado_proveedor']) ? $_POST['timbrado_proveedor'] : '';
+        
+        // Crear factura de compra
+        try {
+            $sql_factura = "INSERT INTO cabecera_factura_compras 
+                            (numero_factura, proveedor_id, fecha_hora, monto_total, condicion_compra, forma_pago, timbrado, numero_factura_proveedor)
+                            VALUES (:numero_factura, :proveedor_id, :fecha_hora, :monto_total, :condicion_compra, :forma_pago, :timbrado, :numero_factura_proveedor)";
+            $stmt_factura = $pdo->prepare($sql_factura);
+            $stmt_factura->execute([
+                'numero_factura' => $numero_factura,
+                'proveedor_id' => $proveedor_id,
+                'fecha_hora' => $fecha,
+                'monto_total' => $total_compra,
+                'condicion_compra' => $condicion_compra,
+                'forma_pago' => $forma_pago,
+                'timbrado' => $timbrado_proveedor,
+                'numero_factura_proveedor' => $numero_factura_proveedor
+            ]);
+            $factura_id = $pdo->lastInsertId();
+            
+            // Insertar detalles de factura
+            foreach($carrito as $item) {
+                $subtotal = $item['cantidad'] * $item['precio'];
+                $sql_detalle_factura = "INSERT INTO detalle_factura_compras 
+                                        (factura_id, producto_id, cantidad, precio_unitario, subtotal)
+                                        VALUES (:factura_id, :producto_id, :cantidad, :precio_unitario, :subtotal)";
+                $stmt_detalle_factura = $pdo->prepare($sql_detalle_factura);
+                $stmt_detalle_factura->execute([
+                    'factura_id' => $factura_id,
+                    'producto_id' => $item['producto_id'],
+                    'cantidad' => $item['cantidad'],
+                    'precio_unitario' => $item['precio'],
+                    'subtotal' => $subtotal
+                ]);
+            }
+        } catch (Exception $e) {
+            // Si la tabla no existe, continuar sin crear factura (se creará después)
+        }
+        
+        // Registrar en auditoría
+        include $base_path . 'includes/auditoria.php';
         registrarAuditoria('crear', 'compras', 'Compra #' . $compra_id . ' creada. Proveedor: ' . $nombre_proveedor . ', Total: ' . number_format($total_compra,0,',','.'));
 
         // Insertar detalles y actualizar stock
@@ -226,6 +298,35 @@ if (isset($_GET['success']) && isset($_GET['compra_id'])) {
             
             <div class="form-row-horizontal">
                 <div class="form-group-horizontal">
+                    <label>N° Factura Proveedor:</label>
+                    <input type="text" name="numero_factura_proveedor" id="input_numero_factura_proveedor" class="form-input-horizontal" placeholder="Opcional">
+                </div>
+                
+                <div class="form-group-horizontal">
+                    <label>Timbrado Proveedor:</label>
+                    <input type="text" name="timbrado_proveedor" id="input_timbrado_proveedor" class="form-input-horizontal" placeholder="Opcional">
+                </div>
+                
+                <div class="form-group-horizontal">
+                    <label>Condición:</label>
+                    <select name="condicion_compra" id="select_condicion" class="form-select-horizontal" required>
+                        <option value="Contado" selected>Contado</option>
+                        <option value="Crédito">Crédito</option>
+                    </select>
+                </div>
+                
+                <div class="form-group-horizontal">
+                    <label>Forma de Pago:</label>
+                    <select name="forma_pago" id="select_forma_pago" class="form-select-horizontal" required>
+                        <option value="Efectivo" selected>Efectivo</option>
+                        <option value="Tarjeta">Tarjeta</option>
+                        <option value="Transferencia">Transferencia</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row-horizontal">
+                <div class="form-group-horizontal">
                     <label>&nbsp;</label>
                     <button type="submit" class="btn-confirmar-venta">
                         <i class="fas fa-check"></i> Confirmar Compra
@@ -235,6 +336,46 @@ if (isset($_GET['success']) && isset($_GET['compra_id'])) {
         </form>
     </div>
 
+    <!-- Lista de facturas de compras -->
+    <?php if(!empty($facturas_compras_recientes)): ?>
+    <div class="ventas-recientes-container">
+        <h2><i class="fas fa-file-invoice"></i> Facturas de Compras</h2>
+        <div class="table-responsive-inline">
+            <table class="crud-table">
+                <thead>
+                    <tr>
+                        <th>N° Factura</th>
+                        <th>Proveedor</th>
+                        <th>Fecha</th>
+                        <th>Total</th>
+                        <th>Condición</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach($facturas_compras_recientes as $factura): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($factura['numero_factura']) ?></td>
+                            <td><?= htmlspecialchars(isset($factura['nombre_proveedor']) && $factura['nombre_proveedor'] ? $factura['nombre_proveedor'] : 'N/A') ?></td>
+                            <td><?= date('d/m/Y H:i', strtotime($factura['fecha_hora'])) ?></td>
+                            <td><?= number_format($factura['monto_total'],0,',','.') ?> Gs</td>
+                            <td><?= htmlspecialchars($factura['condicion_compra']) ?></td>
+                            <td class="acciones">
+                                <a href="/repuestos/modulos/compras/ver_factura_compra.php?id=<?= $factura['id'] ?>" class="btn btn-edit" data-tooltip="Ver" target="_blank">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="/repuestos/modulos/compras/imprimir_factura_compra.php?id=<?= $factura['id'] ?>" class="btn btn-edit" data-tooltip="Imprimir" target="_blank">
+                                    <i class="fas fa-print"></i>
+                                </a>
+                            </td>
+                        </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
+    
     <!-- Lista de compras recientes -->
     <div class="ventas-recientes-container">
         <h2><i class="fas fa-history"></i> Compras Recientes</h2>
