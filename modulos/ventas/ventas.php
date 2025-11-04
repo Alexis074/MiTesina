@@ -434,7 +434,7 @@ input[type="number"].form-input-horizontal::-webkit-inner-spin-button {
 
 .btn-agregar-carrito {
     width: 100%;
-    padding: 10px 20px;
+    padding: 0;
     background: #10b981;
     color: white;
     border: none;
@@ -445,6 +445,11 @@ input[type="number"].form-input-horizontal::-webkit-inner-spin-button {
     transition: background 0.3s;
     height: 42px;
     box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    margin: 0;
 }
 
 .btn-agregar-carrito:hover {
