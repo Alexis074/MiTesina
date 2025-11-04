@@ -3,39 +3,62 @@
     background-color: #1e3a5f;
     display: flex;
     align-items: center;
-    padding: 0 20px;
+    padding: 0 15px;
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    height: 70px;
+    height: 60px;
     z-index: 1000;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+.navbar::-webkit-scrollbar {
+    height: 4px;
+}
+.navbar::-webkit-scrollbar-track {
+    background: #1e3a5f;
+}
+.navbar::-webkit-scrollbar-thumb {
+    background: #2563eb;
+    border-radius: 2px;
 }
 .navbar .logo {
     color: white;
     font-weight: bold;
-    font-size: 26px;
-    margin-right: 40px;
+    font-size: 18px;
+    margin-right: 25px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.navbar .logo i {
+    font-size: 16px;
 }
 .navbar a {
     color: white;
     text-decoration: none;
-    padding: 10px 16px;
-    margin-right: 12px;
-    border-radius: 8px;
+    padding: 8px 12px;
+    margin-right: 8px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 18px;
+    gap: 6px;
+    font-size: 14px;
     transition: background 0.3s, transform 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.navbar a i {
+    font-size: 14px;
 }
 .navbar a:hover {
     background-color: #2563eb;
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 /* ==================== Espaciado general ==================== */
@@ -43,10 +66,11 @@ body {
     margin: 0;
     font-family: Arial, sans-serif;
     background: #f4f6f8;
+    overflow-x: hidden;
 }
 .container {
     padding: 20px;
-    margin-top: 50px;
+    margin-top: 60px;
     max-width: 100%;
     margin-left: auto;
     margin-right: auto;
@@ -143,6 +167,8 @@ table.crud-table th {
 }
 table.crud-table tr:nth-child(even) { background:#f9f9f9; }
 table.crud-table tr:hover { background:#e0f2fe; }
+table.crud-table tr.low-stock { background-color: #fde68a; }
+table.crud-table tr.low-stock:hover { background-color: #fcd34d; }
 
 /* ==================== Botones con iconos y tooltips ==================== */
 .acciones {
@@ -260,11 +286,14 @@ table.crud-table tr:hover { background:#e0f2fe; }
     border: none;
     cursor: pointer;
     transition: background 0.3s, transform 0.2s;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .btn-submit:hover {
     background-color: #1e40af;
     transform: scale(1.05);
+    color: white;
 }
 
 .form-actions {
@@ -296,4 +325,128 @@ table.crud-table tr:hover { background:#e0f2fe; }
     display: flex;
     justify-content: flex-end; /* Empuja el botón a la derecha */
     margin-top: 20px;
+}
+/* ==================== Estilos para eliminar cliente ==================== */
+h1.delete-title {
+    color: #dc2626;
+}
+
+form.inline-form {
+    display: inline;
+}
+
+/* ==================== Estilos adicionales para tablas (productos, proveedores) ==================== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+table th, table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+}
+
+table th {
+    background: #2563eb;
+    color: white;
+}
+
+table tr:hover {
+    background: #e0f2fe;
+}
+
+/* Botones de acción en tablas (variantes) */
+.btn.btn-add {
+    background: #10b981;
+    color: white;
+    padding: 5px 10px;
+    text-decoration: none;
+    margin: 0 2px;
+}
+
+.btn.btn-add:hover {
+    background: #059669;
+    transform: scale(1.05);
+}
+
+.btn.btn-edit-text {
+    background: #f59e0b;
+    color: white;
+    padding: 5px 10px;
+    text-decoration: none;
+    margin: 0 2px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.btn.btn-edit-text:hover {
+    background: #d97706;
+    transform: scale(1.05);
+}
+
+.btn.btn-delete-text {
+    background: #ef4444;
+    color: white;
+    padding: 5px 10px;
+    text-decoration: none;
+    margin: 0 2px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.btn.btn-delete-text:hover {
+    background: #dc2626;
+    transform: scale(1.05);
+}
+
+/* Botón exportar PDF */
+.btn-export {
+    background: #2563eb;
+    color: white;
+    padding: 8px 15px;
+    text-decoration: none;
+    border-radius: 5px;
+    display: inline-block;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.btn-export:hover {
+    background: #1e40af;
+    transform: scale(1.05);
+}
+
+.export-actions {
+    text-align: right;
+    margin-bottom: 10px;
+}
+
+/* Mensajes inline (para productos) */
+.mensaje-inline {
+    text-align: center;
+    font-weight: bold;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+.mensaje-inline.success {
+    color: green;
+}
+
+.mensaje-inline.error {
+    color: red;
+}
+
+/* Estilos para encabezados con botones */
+h1.with-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Tabla responsive */
+.tabla-responsive {
+    overflow-x: auto;
 }

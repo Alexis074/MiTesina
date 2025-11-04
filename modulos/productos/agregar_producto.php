@@ -60,75 +60,48 @@ if (isset($_POST['guardar'])) {
 <meta charset="UTF-8">
 <title>Agregar Producto - Repuestos Doble A</title>
 <link rel="stylesheet" href="<?= $base_url ?>style.css">
-<style>
-body {
-    font-family: Arial, sans-serif;
-    background: #f1f5f9;
-    margin: 0;
-    padding: 0;
-}
-.container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 80vh;
-    text-align: center;
-}
-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    width: 400px;
-    background: white;
-    padding: 30px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    border-radius: 8px;
-}
-form input {
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    width: 100%;
-}
-form button {
-    padding: 12px;
-    font-size: 16px;
-    background: #2563eb;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: 0.3s;
-}
-form button:hover {
-    background: #1e40af;
-}
-h1 {
-    margin-bottom: 20px;
-    color: #1e293b;
-}
-</style>
 </head>
 <body>
 
-<div class="container">
+<div class="container form-container">
     <h1>Agregar Producto</h1>
-    <?php if($mensaje != "") echo "<p style='color:green;'>$mensaje</p>"; ?>
+    <?php if($mensaje != ""): ?>
+        <div class="mensaje <?= strpos($mensaje, 'Error') === false ? 'exito' : 'error' ?>"><?= $mensaje; ?></div>
+    <?php endif; ?>
     <form method="POST">
+        <label>Codigo:</label>
         <input type="text" name="codigo" placeholder="Codigo" required>
+
+        <label>Nombre:</label>
         <input type="text" name="nombre" placeholder="Nombre" required>
+
+        <label>Categoria:</label>
         <input type="text" name="categoria" placeholder="Categoria" required>
+
+        <label>Marca:</label>
         <input type="text" name="marca" placeholder="Marca" required>
+
+        <label>Modelo:</label>
         <input type="text" name="modelo" placeholder="Modelo" required>
+
+        <label>Cilindrada:</label>
         <input type="text" name="cilindrada" placeholder="Cilindrada" required>
+
+        <label>Precio:</label>
         <input type="number" step="1" name="precio" placeholder="Precio" required>
+
+        <label>Stock:</label>
         <input type="number" name="stock" placeholder="Stock" required>
+
+        <label>Stock Minimo:</label>
         <input type="number" name="stock_min" placeholder="Stock Minimo" required>
-        <button type="submit" name="guardar">Agregar Producto</button>
+
+        <div class="form-actions">
+            <button type="submit" name="guardar" class="btn-submit">Agregar Producto</button>
+        </div>
     </form>
 </div>
 
+<?php include $_SERVER['DOCUMENT_ROOT'] . $base_url . 'includes/footer.php'; ?>
 </body>
 </html>

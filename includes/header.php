@@ -12,4 +12,8 @@
     <a href="<?php echo $base_url; ?>modulos/ventas/ventas.php"><i class="fas fa-shopping-cart"></i> Ventas</a>
     <a href="<?php echo $base_url; ?>modulos/compras/compras.php"><i class="fas fa-hand-holding-dollar"></i> Compras</a>
     <a href="<?php echo $base_url; ?>modulos/stock/stock.php"><i class="fas fa-warehouse"></i> Stock</a>
+    <a href="<?php echo $base_url; ?>modulos/auditoria/auditoria.php"><i class="fas fa-clipboard-list"></i> Auditoría</a>
+    <a href="<?php echo $base_url; ?>modulos/reportes/reportes.php"><i class="fas fa-chart-bar"></i> Reportes</a>
+    <a href="<?php echo $base_url; ?>modulos/backup/backup.php"><i class="fas fa-database"></i> Backup</a>
+    <a href="<?php echo $base_url; ?>modulos/facturacion/facturacion.php"><i class="fas fa-file-invoice"></i> Facturación</a>
 </div>

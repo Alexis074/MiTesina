@@ -7,7 +7,7 @@ include $base_path . 'includes/header.php';
 <div class="container tabla-responsive">
     <h1>Clientes</h1>
     <div class="form-actions-right">
-        <button type="submit" class="btn-submit">+ Agregar Cliente</button>
+        <a href="agregar_cliente.php" class="btn-submit">+ Agregar Cliente</a>
     </div>
 
 

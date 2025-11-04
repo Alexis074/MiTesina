@@ -110,47 +110,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Compras - Repuestos Doble A</title>
-<link rel="stylesheet" href="/repuestos/style.css">
-<style>
-.container { padding:20px; margin-top:60px; }
-h1 { margin-bottom:20px; }
-form { background:white; padding:20px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.1); margin-bottom:20px; }
-form label { display:block; margin:10px 0 5px; }
-form select, form input { width:100%; padding:8px; margin-bottom:10px; border-radius:4px; border:1px solid #ccc; }
-form button { padding:10px; background:#2563eb; color:white; border:none; border-radius:4px; cursor:pointer; }
-form button:hover { background:#1e40af; }
-.mensaje { padding:10px; margin-bottom:15px; border-radius:4px; text-align:center; }
-.mensaje.exito { background-color:#d1fae5; color:#065f46; }
-.mensaje.error { background-color:#fee2e2; color:#991b1b; }
-table { width:100%; border-collapse:collapse; background:white; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
-th, td { border:1px solid #ccc; padding:8px; text-align:center; }
-th { background:#2563eb; color:white; }
-tr:hover { background:#e0f2fe; }
-.btn { padding:5px 10px; border-radius:4px; text-decoration:none; font-size:14px; }
-.btn-export { background:#2563eb; color:white; }
-</style>
-</head>
-<body>
+<div class="container tabla-responsive">
+    <h1>Registrar Venta</h1>
 
-<div class="container">
-<h1>Registrar Venta</h1>
-
-<?php if($mensaje!=""): ?>
-<div class="mensaje"><?= $mensaje ?>
-    <?php if($factura_id): ?>
-        <br>
-        <a href="/repuestos/modulos/ventas/ver_factura.php?id=<?= $factura_id ?>" class="btn btn-primary btn-sm" target="_blank">Ver Factura</a>
-        <a href="/repuestos/modulos/ventas/imprimir_factura.php?id=<?= $factura_id ?>" class="btn btn-primary btn-sm" target="_blank">Imprimir Factura</a>
+    <?php if($mensaje!=""): ?>
+        <div class="mensaje <?= strpos($mensaje,'Error') === false ? 'exito' : 'error' ?>"><?= $mensaje ?>
+            <?php if($factura_id): ?>
+                <br><br>
+                <a href="/repuestos/modulos/ventas/ver_factura.php?id=<?= $factura_id ?>" class="btn-export" target="_blank"><i class="fas fa-eye"></i> Ver Factura</a>
+                <a href="/repuestos/modulos/ventas/imprimir_factura.php?id=<?= $factura_id ?>" class="btn-export" target="_blank"><i class="fas fa-print"></i> Imprimir Factura</a>
+            <?php endif; ?>
+        </div>
     <?php endif; ?>
-</div>
-<?php endif; ?>
 
-<form method="POST" class="venta-form">
+    <div class="form-container">
+        <form method="POST" class="venta-form">
     <div class="mb-3">
         <label>Cliente:</label>
         <select id="cliente_select" name="cliente_id" class="form-select" required onchange="llenarRUC()">
@@ -216,9 +190,12 @@ tr:hover { background:#e0f2fe; }
 
     <h4>Total: <span id="total_display">0</span></h4>
 
-    <button type="submit" class="btn btn-primary mt-3">Registrar Venta</button>
-</form>
+            <button type="submit" class="btn-submit">Registrar Venta</button>
+        </form>
+    </div>
 </div>
+
+<?php include $base_path . 'includes/footer.php'; ?>
 
 <script>
 function llenarRUC(){
@@ -306,5 +283,3 @@ document.querySelectorAll('.producto_select').forEach(sel=>{
     sel.addEventListener('change',()=>autocompletarPrecio(sel));
 });
 </script>
-</body>
-</html>

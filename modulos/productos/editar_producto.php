@@ -54,13 +54,15 @@ if (isset($_POST['actualizar'])) {
         'stock_min' => $stock_min,
         'id' => $id
     ])) {
-        echo "<p style='color:green; text-align:center;'>Producto actualizado correctamente.</p>";
+        $mensaje = "Producto actualizado correctamente.";
+        $mensaje_tipo = "exito";
         // Refresca los datos para mostrar los cambios
         $stmt = $pdo->prepare("SELECT * FROM productos WHERE id = :id");
         $stmt->execute(['id' => $id]);
         $fila = $stmt->fetch();
     } else {
-        echo "<p style='color:red; text-align:center;'>Error al actualizar producto.</p>";
+        $mensaje = "Error al actualizar producto.";
+        $mensaje_tipo = "error";
     }
 }
 ?>
@@ -71,40 +73,14 @@ if (isset($_POST['actualizar'])) {
 <meta charset="UTF-8">
 <title>Editar Producto - Repuestos Doble A</title>
 <link rel="stylesheet" href="<?= $base_url ?>style.css"> 
-<style>
-.container {
-    padding: 20px;
-    margin-top: 60px;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-    background: #fff;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    border-radius: 8px;
-}
-h1 { text-align: center; color: #1e293b; }
-form input, form button {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 12px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 14px;
-}
-form button {
-    background: #2563eb;
-    color: white;
-    border: none;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-form button:hover { background: #1e40af; }
-</style>
 </head>
 <body>
 
-<div class="container">
+<div class="container form-container">
     <h1>Editar Producto</h1>
+    <?php if(isset($mensaje)): ?>
+        <div class="mensaje <?= $mensaje_tipo ?>"><?= $mensaje; ?></div>
+    <?php endif; ?>
     <form method="POST">
         <input type="hidden" name="id" value="<?= $fila['id']; ?>">
 
@@ -135,9 +111,12 @@ form button:hover { background: #1e40af; }
         <label>Stock Minimo</label>
         <input type="number" name="stock_min" value="<?= (int)$fila['stock_min']; ?>" required>
 
-        <button type="submit" name="actualizar">Actualizar Producto</button>
+        <div class="form-actions">
+            <button type="submit" name="actualizar" class="btn-submit">Actualizar Producto</button>
+        </div>
     </form>
 </div>
 
+<?php include $_SERVER['DOCUMENT_ROOT'] . $base_url . 'includes/footer.php'; ?>
 </body>
 </html>

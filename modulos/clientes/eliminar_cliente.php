@@ -27,14 +27,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <div class="container form-container">
-    <h1 style="color:#dc2626;">Eliminar Cliente</h1>
+    <h1 class="delete-title">Eliminar Cliente</h1>
     <p>Seguro que deseas eliminar al cliente <strong><?= htmlspecialchars($cliente['nombre'] . " " . $cliente['apellido']) ?></strong>?</p>
 
-    <form method="POST" style="display:inline;">
+    <form method="POST" class="inline-form">
         <div class="form-actions">
             <button type="submit" class="btn-submit">Sí, eliminar</button>
             <a href="clientes.php" class="btn-cancelar">Cancelar</a>
         </div>
+    </form>
 </div>
 
 <?php include $base_path . 'includes/footer.php'; ?>
