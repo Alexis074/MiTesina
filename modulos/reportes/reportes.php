@@ -1,6 +1,10 @@
 <?php
 $base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
 include $base_path . 'includes/conexion.php';
+include $base_path . 'includes/session.php';
+include $base_path . 'includes/auth.php';
+requerirLogin();
+requerirPermiso('reportes', 'ver');
 include $base_path . 'includes/header.php';
 ?>
 
