@@ -2,6 +2,8 @@
 date_default_timezone_set('America/Asuncion');
 $base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
 include $base_path . 'includes/conexion.php';
+include $base_path . 'includes/session.php';
+include $base_path . 'includes/auditoria.php';
 include $base_path . 'includes/header.php';
 
 $mensaje = "";
@@ -17,6 +19,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$caja_abierta) {
     $sql = "INSERT INTO caja (fecha, monto_inicial, estado, created_at) VALUES (CURDATE(), :monto_inicial, 'Abierta', :created_at)";
     $stmt = $pdo->prepare($sql);
     if($stmt->execute(['monto_inicial'=>$monto_inicial,'created_at'=>$created_at])){
+        // Obtener ID de la caja recién creada
+        $caja_id = $pdo->lastInsertId();
+        
+        // Registrar en auditoría
+        $detalle = "Caja abierta con monto inicial: " . number_format($monto_inicial, 0, ',', '.') . " Gs (ID Caja: " . $caja_id . ")";
+        registrarAuditoria('abrir', 'caja', $detalle);
+        
         $mensaje = "Caja abierta correctamente.";
         // Refrescar para mostrar la caja abierta
         header("Location: caja.php");

@@ -2,6 +2,8 @@
 date_default_timezone_set('America/Asuncion');
 $base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
 include $base_path . 'includes/conexion.php';
+include $base_path . 'includes/session.php';
+include $base_path . 'includes/auditoria.php';
 include $base_path . 'includes/header.php';
 
 $mensaje = "";
@@ -59,10 +61,24 @@ if(!$caja){
     }
 
     $monto_final = $caja['monto_inicial'] + $total_ingresos - $total_egresos;
+    
+    // Calcular saldo
+    $saldo = $monto_final - $caja['monto_inicial'];
 
     // Actualizar caja como cerrada
-    $stmt = $pdo->prepare("UPDATE caja SET monto_final=:monto_final, estado='Cerrada' WHERE id=:id");
+    // Intentar actualizar con fecha_cierre si existe la columna
+    try {
+        $stmt = $pdo->prepare("UPDATE caja SET monto_final=:monto_final, estado='Cerrada', fecha_cierre=NOW() WHERE id=:id");
+    } catch (Exception $e) {
+        // Si fecha_cierre no existe, usar solo monto_final y estado
+        $stmt = $pdo->prepare("UPDATE caja SET monto_final=:monto_final, estado='Cerrada' WHERE id=:id");
+    }
+    
     if($stmt->execute(['monto_final'=>$monto_final,'id'=>$caja['id']])){
+        // Registrar en auditoría
+        $detalle = "Caja cerrada - Monto inicial: " . number_format($caja['monto_inicial'], 0, ',', '.') . " Gs | Monto final: " . number_format($monto_final, 0, ',', '.') . " Gs | Saldo: " . number_format($saldo, 0, ',', '.') . " Gs | Ingresos: " . number_format($total_ingresos, 0, ',', '.') . " Gs | Egresos: " . number_format($total_egresos, 0, ',', '.') . " Gs (ID Caja: " . $caja['id'] . ")";
+        registrarAuditoria('cerrar', 'caja', $detalle);
+        
         $mensaje = "Caja cerrada correctamente. Monto final: " . number_format($monto_final,2,',','.') . " Gs";
     } else {
         $mensaje = "Error al cerrar la caja.";
@@ -82,8 +98,8 @@ h1 { margin-bottom:20px; }
 .mensaje { padding:10px; margin-bottom:15px; border-radius:4px; text-align:center; font-size:16px; }
 .mensaje.exito { background-color:#d1fae5; color:#065f46; }
 .mensaje.error { background-color:#fee2e2; color:#991b1b; }
-.btn { padding:10px 20px; border-radius:4px; text-decoration:none; font-size:16px; background:#10b981; color:white; }
-.btn:hover { background:#059669; }
+.btn { padding:10px 20px; border-radius:4px; text-decoration:none; font-size:16px; background:#2563eb; color:white; }
+.btn:hover { background:#1e40af; }
 </style>
 </head>
 <body>
@@ -95,7 +111,7 @@ h1 { margin-bottom:20px; }
 <div class="mensaje <?= strpos($mensaje,'Error')===false?'exito':'error' ?>"><?= $mensaje ?></div>
 <?php endif; ?>
 
-<a href="caja.php" class="btn">Volver a Caja</a>
+<a href="caja.php" class="btn">Volver</a>
 
 </div>
 
