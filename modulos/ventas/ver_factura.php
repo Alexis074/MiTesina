@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Asuncion');
 $base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/header.php';
@@ -158,7 +159,7 @@ tfoot td { font-weight:bold; text-align:left; }
 
     <div class="datos-cliente">
         <div>
-            <strong>Cliente:</strong> <?php echo htmlspecialchars($factura['nombre'].' '.$factura['apellido']); ?><br>
+            <strong>Nombre:</strong> <?php echo htmlspecialchars($factura['nombre'].' '.$factura['apellido']); ?><br>
             <strong>RUC:</strong> <?php echo htmlspecialchars($factura['ruc']); ?><br> 
             <strong>Dirección:</strong> <?php echo htmlspecialchars($factura['direccion']); ?><br>
             <strong>Teléfono:</strong> <?php echo htmlspecialchars($factura['telefono']); ?><br>

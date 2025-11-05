@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Asuncion');
 $base_url = '/repuestos/';
 include $_SERVER['DOCUMENT_ROOT'] . $base_url . 'includes/header.php';
 include $_SERVER['DOCUMENT_ROOT'] . $base_url . 'includes/conexion.php'; // ✅ Usar PDO

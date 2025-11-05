@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Asuncion');
 $base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 
@@ -74,7 +75,7 @@ if(!isset($_GET['id'])) {
 $factura_id = (int)$_GET['id'];
 
 // Obtener cabecera de factura de compra
-$stmt_cab = $pdo->prepare("SELECT fc.*, p.empresa, p.ruc, p.direccion, p.telefono, p.email
+$stmt_cab = $pdo->prepare("SELECT fc.*, p.empresa, p.direccion, p.telefono, p.email, p.ruc
                            FROM cabecera_factura_compras fc
                            JOIN proveedores p ON fc.proveedor_id = p.id
                            WHERE fc.id = :id");
@@ -95,10 +96,9 @@ $empresa_compradora = array(
     'email' => 'contacto@repuestosdoblea.com'
 );
 
-// Datos del proveedor (emisor)
+// Datos del proveedor (emisor de la factura)
 $proveedor = array(
     'nombre' => $factura['empresa'],
-    'ruc' => $factura['ruc'],
     'direccion' => $factura['direccion'],
     'telefono' => $factura['telefono'],
     'email' => isset($factura['email']) ? $factura['email'] : ''
@@ -146,42 +146,49 @@ tfoot td { font-weight:bold; text-align:left; }
 <div class="factura-container">
 
     <div class="encabezado">
-        <div class="empresa-datos-left">
+        <div class="empresa-datos-left" style="width: 100%;">
             <strong><?php echo htmlspecialchars($proveedor['nombre']); ?></strong><br>
-            RUC: <?php echo htmlspecialchars($proveedor['ruc']); ?><br>
+            <?php 
+            // RUC del proveedor: usar el RUC de la base de datos, si no existe usar timbrado como fallback
+            $ruc_proveedor = '';
+            if (isset($factura['ruc']) && $factura['ruc']) {
+                $ruc_proveedor = $factura['ruc'];
+            } elseif (isset($factura['timbrado']) && $factura['timbrado']) {
+                $ruc_proveedor = $factura['timbrado'];
+            } else {
+                $ruc_proveedor = str_pad($factura['proveedor_id'], 8, '0', STR_PAD_LEFT);
+            }
+            ?>
+            RUC: <?php echo htmlspecialchars($ruc_proveedor); ?><br>
             <?php echo htmlspecialchars($proveedor['direccion']); ?><br>
             Tel: <?php echo htmlspecialchars($proveedor['telefono']); ?><br>
             <?php if($proveedor['email']): ?>
             Email: <?php echo htmlspecialchars($proveedor['email']); ?>
             <?php endif; ?>
         </div>
-        <div class="empresa-datos">
-            <strong><?php echo htmlspecialchars($empresa_compradora['nombre']); ?></strong><br>
-            RUC: <?php echo htmlspecialchars($empresa_compradora['ruc']); ?><br>
-            <?php echo htmlspecialchars($empresa_compradora['direccion']); ?><br>
-            Tel: <?php echo htmlspecialchars($empresa_compradora['telefono']); ?><br>
-            Email: <?php echo htmlspecialchars($empresa_compradora['email']); ?>
-        </div>
     </div>
 
     <div class="titulo">FACTURA DE COMPRA</div>
 
     <div class="timbrado">
-        <?php if($factura['timbrado']): ?>
-        <strong>Timbrado Proveedor:</strong> <?php echo htmlspecialchars($factura['timbrado']); ?> |
+        <?php 
+        $timbrado = isset($factura['timbrado']) && $factura['timbrado'] ? $factura['timbrado'] : '';
+        $inicio_vigencia = isset($factura['inicio_vigencia']) && $factura['inicio_vigencia'] ? date('d/m/Y', strtotime($factura['inicio_vigencia'])) : '01/01/2025';
+        $fin_vigencia = isset($factura['fin_vigencia']) && $factura['fin_vigencia'] ? date('d/m/Y', strtotime($factura['fin_vigencia'])) : '31/12/2025';
+        ?>
+        <?php if($timbrado): ?>
+        <strong>Timbrado:</strong> <?php echo htmlspecialchars($timbrado); ?> |
         <?php endif; ?>
-        <?php if($factura['numero_factura_proveedor']): ?>
-        <strong>N° Factura Proveedor:</strong> <?php echo htmlspecialchars($factura['numero_factura_proveedor']); ?> |
-        <?php endif; ?>
-        <strong>N° Factura Interna:</strong> <?php echo htmlspecialchars($factura['numero_factura']); ?>
+        <strong>Vigencia:</strong> <?php echo $inicio_vigencia; ?> al <?php echo $fin_vigencia; ?><br>
+        <strong>N° de Factura:</strong> <?php echo htmlspecialchars($factura['numero_factura']); ?>
     </div>
 
     <div class="datos-cliente">
         <div>
-            <strong>Proveedor:</strong> <?php echo htmlspecialchars($proveedor['nombre']); ?><br>
-            <strong>RUC:</strong> <?php echo htmlspecialchars($proveedor['ruc']); ?><br> 
-            <strong>Dirección:</strong> <?php echo htmlspecialchars($proveedor['direccion']); ?><br>
-            <strong>Teléfono:</strong> <?php echo htmlspecialchars($proveedor['telefono']); ?><br>
+            <strong>Nombre:</strong> <?php echo htmlspecialchars($empresa_compradora['nombre']); ?><br>
+            <strong>RUC:</strong> <?php echo htmlspecialchars($empresa_compradora['ruc']); ?><br> 
+            <strong>Dirección:</strong> <?php echo htmlspecialchars($empresa_compradora['direccion']); ?><br>
+            <strong>Teléfono:</strong> <?php echo htmlspecialchars($empresa_compradora['telefono']); ?><br>
         </div>
         <div style="text-align:right;">
             <strong>Fecha:</strong> <?php echo date('d/m/Y H:i', strtotime($factura['fecha_hora'])); ?><br>

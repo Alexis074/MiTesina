@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Asuncion');
 $base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/session.php';
@@ -82,31 +83,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $proveedor = $stmt_prov->fetch();
         $nombre_proveedor = $proveedor ? $proveedor['empresa'] : 'ID ' . $proveedor_id;
         
-        // Generar número de factura único para compra
-        $stmt_num = $pdo->query("SELECT MAX(id) as max_id FROM cabecera_factura_compras");
-        $row = $stmt_num->fetch(PDO::FETCH_ASSOC);
-        $next_id = ($row && $row['max_id']) ? ((int)$row['max_id'] + 1) : 1;
-        $numero_factura = 'FC-' . str_pad($next_id, 6, '0', STR_PAD_LEFT);
+        // Generar número de factura único en formato paraguayo (001-001-000054)
+        $numero_factura = '';
+        $intentos = 0;
+        do {
+            // Generar número aleatorio pero secuencial basado en el ID
+            $stmt_num = $pdo->query("SELECT MAX(id) as max_id FROM cabecera_factura_compras");
+            $row = $stmt_num->fetch(PDO::FETCH_ASSOC);
+            $base_num = ($row && $row['max_id']) ? ((int)$row['max_id'] + 1) : 1;
+            
+            // Formato: 001-001-000054 (establecimiento-punto-emision-numero)
+            $establecimiento = '001';
+            $punto_emision = '001';
+            $numero_secuencial = str_pad($base_num + $intentos + rand(0, 100), 6, '0', STR_PAD_LEFT);
+            $numero_factura = $establecimiento . '-' . $punto_emision . '-' . $numero_secuencial;
+            
+            // Verificar que el número de factura no exista
+            $stmt_verificar = $pdo->prepare("SELECT id FROM cabecera_factura_compras WHERE numero_factura = ?");
+            $stmt_verificar->execute(array($numero_factura));
+            $intentos++;
+        } while ($stmt_verificar->fetch() && $intentos < 100);
         
-        // Verificar que el número de factura no exista
-        $stmt_verificar = $pdo->prepare("SELECT id FROM cabecera_factura_compras WHERE numero_factura = ?");
-        $stmt_verificar->execute(array($numero_factura));
-        if ($stmt_verificar->fetch()) {
-            $next_id++;
-            $numero_factura = 'FC-' . str_pad($next_id, 6, '0', STR_PAD_LEFT);
-        }
+        // Generar timbrado aleatorio (8 dígitos)
+        $timbrado_proveedor = str_pad(rand(1000000, 99999999), 8, '0', STR_PAD_LEFT);
+        
+        // Generar fechas de vigencia (año completo: 01/01/2025 al 31/12/2025)
+        $anio_actual = date('Y');
+        $fecha_inicio_vigencia = $anio_actual . '-01-01'; // Primer día del año
+        $fecha_fin_vigencia = $anio_actual . '-12-31'; // Último día del año
         
         // Obtener datos de condición de compra y forma de pago
         $condicion_compra = isset($_POST['condicion_compra']) ? $_POST['condicion_compra'] : 'Contado';
         $forma_pago = isset($_POST['forma_pago']) ? $_POST['forma_pago'] : 'Efectivo';
-        $numero_factura_proveedor = isset($_POST['numero_factura_proveedor']) ? $_POST['numero_factura_proveedor'] : '';
-        $timbrado_proveedor = isset($_POST['timbrado_proveedor']) ? $_POST['timbrado_proveedor'] : '';
+        $numero_factura_proveedor = ''; // Ya no se pide al usuario
         
         // Crear factura de compra
         try {
             $sql_factura = "INSERT INTO cabecera_factura_compras 
-                            (numero_factura, proveedor_id, fecha_hora, monto_total, condicion_compra, forma_pago, timbrado, numero_factura_proveedor)
-                            VALUES (:numero_factura, :proveedor_id, :fecha_hora, :monto_total, :condicion_compra, :forma_pago, :timbrado, :numero_factura_proveedor)";
+                            (numero_factura, proveedor_id, fecha_hora, monto_total, condicion_compra, forma_pago, timbrado, numero_factura_proveedor, inicio_vigencia, fin_vigencia)
+                            VALUES (:numero_factura, :proveedor_id, :fecha_hora, :monto_total, :condicion_compra, :forma_pago, :timbrado, :numero_factura_proveedor, :inicio_vigencia, :fin_vigencia)";
             $stmt_factura = $pdo->prepare($sql_factura);
             $stmt_factura->execute([
                 'numero_factura' => $numero_factura,
@@ -116,7 +131,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'condicion_compra' => $condicion_compra,
                 'forma_pago' => $forma_pago,
                 'timbrado' => $timbrado_proveedor,
-                'numero_factura_proveedor' => $numero_factura_proveedor
+                'numero_factura_proveedor' => $numero_factura_proveedor,
+                'inicio_vigencia' => $fecha_inicio_vigencia,
+                'fin_vigencia' => $fecha_fin_vigencia
             ]);
             $factura_id = $pdo->lastInsertId();
             
@@ -148,16 +165,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $subtotal = $item['cantidad'] * $item['precio'];
 
             // Insertar detalle incluyendo subtotal
-            $sql_detalle = "INSERT INTO compras_detalle (compra_id, producto_id, cantidad, precio_unitario, subtotal)
-                            VALUES (:compra_id, :producto_id, :cantidad, :precio_unitario, :subtotal)";
-            $stmt_detalle = $pdo->prepare($sql_detalle);
-            $stmt_detalle->execute([
-                'compra_id' => $compra_id,
-                'producto_id' => $item['producto_id'],
-                'cantidad' => $item['cantidad'],
-                'precio_unitario' => $item['precio'],
-                'subtotal' => $subtotal
-            ]);
+            try {
+                $sql_detalle = "INSERT INTO compras_detalle (compra_id, producto_id, cantidad, precio_unitario, subtotal)
+                                VALUES (:compra_id, :producto_id, :cantidad, :precio_unitario, :subtotal)";
+                $stmt_detalle = $pdo->prepare($sql_detalle);
+                $stmt_detalle->execute([
+                    'compra_id' => $compra_id,
+                    'producto_id' => $item['producto_id'],
+                    'cantidad' => $item['cantidad'],
+                    'precio_unitario' => $item['precio'],
+                    'subtotal' => $subtotal
+                ]);
+            } catch (PDOException $e) {
+                // Si falla, intentar sin el campo subtotal (compatibilidad con tablas antiguas)
+                try {
+                    $sql_detalle = "INSERT INTO compras_detalle (compra_id, producto_id, cantidad, precio_unitario)
+                                    VALUES (:compra_id, :producto_id, :cantidad, :precio_unitario)";
+                    $stmt_detalle = $pdo->prepare($sql_detalle);
+                    $stmt_detalle->execute([
+                        'compra_id' => $compra_id,
+                        'producto_id' => $item['producto_id'],
+                        'cantidad' => $item['cantidad'],
+                        'precio_unitario' => $item['precio']
+                    ]);
+                } catch (PDOException $e2) {
+                    // Si sigue fallando, mostrar error pero continuar
+                    error_log("Error al insertar detalle de compra: " . $e2->getMessage());
+                }
+            }
 
             // Actualizar stock
             $sql_stock = "UPDATE productos SET stock = stock + :cantidad WHERE id=:producto_id";
@@ -298,16 +333,6 @@ if (isset($_GET['success']) && isset($_GET['compra_id'])) {
             
             <div class="form-row-horizontal">
                 <div class="form-group-horizontal">
-                    <label>N° Factura Proveedor:</label>
-                    <input type="text" name="numero_factura_proveedor" id="input_numero_factura_proveedor" class="form-input-horizontal" placeholder="Opcional">
-                </div>
-                
-                <div class="form-group-horizontal">
-                    <label>Timbrado Proveedor:</label>
-                    <input type="text" name="timbrado_proveedor" id="input_timbrado_proveedor" class="form-input-horizontal" placeholder="Opcional">
-                </div>
-                
-                <div class="form-group-horizontal">
                     <label>Condición:</label>
                     <select name="condicion_compra" id="select_condicion" class="form-select-horizontal" required>
                         <option value="Contado" selected>Contado</option>
@@ -323,6 +348,10 @@ if (isset($_GET['success']) && isset($_GET['compra_id'])) {
                         <option value="Transferencia">Transferencia</option>
                     </select>
                 </div>
+            </div>
+            
+            <div style="padding: 10px; background: #f0f9ff; border-radius: 5px; margin: 10px 0; font-size: 13px; color: #0369a1;">
+                <i class="fas fa-info-circle"></i> <strong>Nota:</strong> El número de factura y timbrado se generarán automáticamente al confirmar la compra.
             </div>
             
             <div class="form-row-horizontal">

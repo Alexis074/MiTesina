@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Asuncion');
 $base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/header.php';
@@ -26,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $telefono = $_POST['telefono'];
     $email = $_POST['email'];
     $direccion = $_POST['direccion'];
+    $ruc = isset($_POST['ruc']) ? $_POST['ruc'] : '';
 
     if (!preg_match("/^[A-Za-z0-9\s\.\-]+$/", $empresa)) {
         $mensaje = "Error: El nombre de la empresa contiene caracteres no válidos.";
@@ -39,7 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     contacto=:contacto,
                     telefono=:telefono,
                     email=:email,
-                    direccion=:direccion
+                    direccion=:direccion,
+                    ruc=:ruc
                 WHERE id=:id";
         $stmt = $pdo->prepare($sql);
         if ($stmt->execute([
@@ -48,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':telefono'=>$telefono,
             ':email'=>$email,
             ':direccion'=>$direccion,
+            ':ruc'=>$ruc,
             ':id'=>$id
         ])) {
             $mensaje = "Proveedor actualizado correctamente.";
@@ -82,7 +86,7 @@ button:hover { background:#1e40af; }
 <h1>Editar Proveedor</h1>
 
 <div style="margin-bottom: 20px; text-align: right;">
-    <a href="/repuestos/modulos/proveedores/proveedores.php" class="btn-cancelar" style="display: inline-block; padding: 8px 15px; background: #6b7280; color: white; text-decoration: none; border-radius: 4px;"><i class="fas fa-arrow-left"></i> Volver</a>
+    <a href="/repuestos/modulos/proveedores/proveedores.php" class="btn-cancelar" style="display: inline-block; padding: 8px 15px; background:rgb(255, 0, 0); color: white; text-decoration: none; border-radius: 4px;"><i class="fas fa-arrow-left"></i> Volver</a>
 </div>
 
 <?php if($mensaje != ""): ?>
@@ -105,6 +109,9 @@ button:hover { background:#1e40af; }
 
 <label>Dirección:</label>
 <input type="text" name="direccion" value="<?= $fila['direccion'] ?>">
+
+<label>RUC:</label>
+<input type="text" name="ruc" value="<?= isset($fila['ruc']) ? $fila['ruc'] : '' ?>" placeholder="Ej: 80012345-6">
 
 <button type="submit">Actualizar Proveedor</button>
 </form>

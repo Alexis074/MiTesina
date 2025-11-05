@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Asuncion');
 $base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/session.php';
@@ -21,6 +22,7 @@ include $base_path . 'includes/header.php';
             <tr>
                 <th>ID</th>
                 <th>Empresa</th>
+                <th>RUC</th>
                 <th>Contacto</th>
                 <th>Teléfono</th>
                 <th>Email</th>
@@ -38,6 +40,7 @@ include $base_path . 'includes/header.php';
                 echo '<tr>';
                 echo '<td>'.htmlspecialchars($fila['id']).'</td>';
                 echo '<td>'.htmlspecialchars($fila['empresa']).'</td>';
+                echo '<td>'.htmlspecialchars(isset($fila['ruc']) ? $fila['ruc'] : 'N/A').'</td>';
                 echo '<td>'.htmlspecialchars($fila['contacto']).'</td>';
                 echo '<td>'.htmlspecialchars($fila['telefono']).'</td>';
                 echo '<td>'.htmlspecialchars($fila['email']).'</td>';
@@ -54,7 +57,7 @@ include $base_path . 'includes/header.php';
                 echo '</tr>';
             }
         } else {
-            echo '<tr><td colspan="8">No hay proveedores registrados.</td></tr>';
+            echo '<tr><td colspan="9">No hay proveedores registrados.</td></tr>';
         }
         ?>
         </tbody>

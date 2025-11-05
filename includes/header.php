@@ -47,5 +47,8 @@ include $base_path . 'includes/auth.php';
     <?php if (tienePermiso('usuarios', 'ver')): ?>
     <a href="<?php echo $base_url; ?>modulos/usuarios/usuarios.php" <?php echo (strpos($current_page, 'usuarios') !== false) ? 'class="active"' : ''; ?>><i class="fas fa-users-cog"></i> Usuarios</a>
     <?php endif; ?>
+    <?php if (tienePermiso('usuarios', 'crear')): ?>
+    <a href="<?php echo $base_url; ?>modulos/administracion/resetear_sistema.php" <?php echo (strpos($current_page, 'resetear_sistema') !== false) ? 'class="active"' : ''; ?> style="color: #dc2626;"><i class="fas fa-exclamation-triangle"></i> Resetear</a>
+    <?php endif; ?>
     <a href="<?php echo $base_url; ?>logout.php" style="margin-left: auto;"><i class="fas fa-sign-out-alt"></i> Salir</a>
 </div>

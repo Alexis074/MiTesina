@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Asuncion');
 $base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/header.php';
@@ -11,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $telefono = $_POST['telefono'];
     $email = $_POST['email'];
     $direccion = $_POST['direccion'];
+    $ruc = isset($_POST['ruc']) ? $_POST['ruc'] : '';
     $created_at = date("Y-m-d H:i:s");
 
     // Validaciones básicas
@@ -21,8 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!preg_match("/^[0-9\-]+$/", $telefono)) {
         $mensaje = "Error: El teléfono solo puede contener números y guiones.";
     } else {
-        $sql = "INSERT INTO proveedores (empresa, contacto, telefono, email, direccion, created_at)
-                VALUES (:empresa, :contacto, :telefono, :email, :direccion, :created_at)";
+        $sql = "INSERT INTO proveedores (empresa, contacto, telefono, email, direccion, ruc, created_at)
+                VALUES (:empresa, :contacto, :telefono, :email, :direccion, :ruc, :created_at)";
         $stmt = $pdo->prepare($sql);
         if($stmt->execute([
             ':empresa'=>$empresa,
@@ -30,10 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':telefono'=>$telefono,
             ':email'=>$email,
             ':direccion'=>$direccion,
+            ':ruc'=>$ruc,
             ':created_at'=>$created_at
         ])){
             $mensaje = "Proveedor agregado correctamente.";
-            $empresa = $contacto = $telefono = $email = $direccion = "";
+            $empresa = $contacto = $telefono = $email = $direccion = $ruc = "";
         } else {
             $mensaje = "Error al agregar proveedor.";
         }
@@ -86,6 +89,9 @@ button:hover { background:#1e40af; }
 
 <label>Direccion:</label>
 <input type="text" name="direccion" value="<?= isset($direccion) ? $direccion : '' ?>">
+
+<label>RUC:</label>
+<input type="text" name="ruc" value="<?= isset($ruc) ? $ruc : '' ?>" placeholder="Ej: 80012345-6">
 
 <button type="submit">Agregar Proveedor</button>
 </form>

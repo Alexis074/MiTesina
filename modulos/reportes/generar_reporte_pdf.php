@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Asuncion');
 $base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 require($base_path . 'fpdf/fpdf.php');
@@ -39,13 +40,61 @@ $total_ventas = $stats_ventas['monto_total'] ? (float)$stats_ventas['monto_total
 $total_compras = $stats_compras['monto_total'] ? (float)$stats_compras['monto_total'] : 0;
 $ganancia_neta = $total_ventas - $total_compras;
 
-// Calcular saldo de cajas
+// Calcular saldo de cajas RECALCULANDO desde ventas y compras reales (sin duplicar por caja)
 $monto_inicial_total = 0;
-$monto_final_total = 0;
 foreach($cajas_cerradas as $caja) {
-    $monto_inicial_total += $caja['monto_inicial'];
-    $monto_final_total += $caja['monto_final'];
+    $monto_inicial_total += (float)$caja['monto_inicial'];
 }
+
+// Calcular ingresos y egresos TOTALES en el rango de fechas (sin duplicar por caja)
+// Total de ingresos (ventas) en el rango de fechas
+$stmt_ingresos_total = $pdo->prepare("SELECT SUM(monto_total) as total 
+                                     FROM cabecera_factura_ventas 
+                                     WHERE fecha_hora >= ? AND fecha_hora <= ? AND (anulada = 0 OR anulada IS NULL)");
+$stmt_ingresos_total->execute([$fecha_desde, $fecha_hasta . ' 23:59:59']);
+$ingresos_total_data = $stmt_ingresos_total->fetch();
+$ingresos_totales = $ingresos_total_data['total'] ? (float)$ingresos_total_data['total'] : 0;
+
+// Total de egresos (compras) en el rango de fechas
+$stmt_egresos_total = $pdo->prepare("SELECT SUM(total) as total 
+                                     FROM compras 
+                                     WHERE fecha >= ? AND fecha <= ?");
+$stmt_egresos_total->execute([$fecha_desde, $fecha_hasta . ' 23:59:59']);
+$egresos_total_data = $stmt_egresos_total->fetch();
+$egresos_totales = $egresos_total_data['total'] ? (float)$egresos_total_data['total'] : 0;
+
+// Facturas de compras (egresos) - si existen
+try {
+    $stmt_facturas_compras_total = $pdo->prepare("SELECT SUM(monto_total) as total 
+                                                   FROM cabecera_factura_compras 
+                                                   WHERE fecha_hora >= ? AND fecha_hora <= ?");
+    $stmt_facturas_compras_total->execute([$fecha_desde, $fecha_hasta . ' 23:59:59']);
+    $facturas_compras_total_data = $stmt_facturas_compras_total->fetch();
+    $egresos_totales += $facturas_compras_total_data['total'] ? (float)$facturas_compras_total_data['total'] : 0;
+} catch (Exception $e) {
+    // Tabla no existe, continuar
+}
+
+// Movimientos manuales de todas las cajas en el rango
+$movimientos_manuales_totales = 0;
+$egresos_manuales_totales = 0;
+foreach($cajas_cerradas as $caja) {
+    $stmt_mov_manual = $pdo->prepare("SELECT * FROM caja_movimientos WHERE caja_id=?");
+    $stmt_mov_manual->execute([$caja['id']]);
+    $movimientos_manual = $stmt_mov_manual->fetchAll();
+    foreach($movimientos_manual as $m){
+        if($m['tipo']=='Ingreso') {
+            $movimientos_manuales_totales += (float)$m['monto'];
+        } else {
+            $egresos_manuales_totales += (float)$m['monto'];
+        }
+    }
+}
+$ingresos_totales += $movimientos_manuales_totales;
+$egresos_totales += $egresos_manuales_totales;
+
+// Calcular monto final: monto_inicial_total + ingresos_totales - egresos_totales
+$monto_final_total = $monto_inicial_total + $ingresos_totales - $egresos_totales;
 $saldo_cajas = $monto_final_total - $monto_inicial_total;
 
 // Crear PDF
@@ -106,7 +155,7 @@ if(!empty($cajas_cerradas)) {
     $pdf->Cell(95, 8, number_format($monto_final_total, 0, ',', '.') . ' Gs', 1, 1, 'R');
     $pdf->SetFillColor($saldo_cajas >= 0 ? 220 : 255, $saldo_cajas >= 0 ? 255 : 220, $saldo_cajas >= 0 ? 220 : 220);
     $pdf->Cell(95, 8, utf8_decode('Saldo Cajas:'), 1, 0, 'L', true);
-    $pdf->Cell(95, 8, number_format($saldo_cajas, 0, ',', '.') . ' Gs ' . ($saldo_cajas < 0 ? '(PÉRDIDA)' : ''), 1, 1, 'R');
+    $pdf->Cell(95, 8, number_format($saldo_cajas, 0, ',', '.') . ' Gs ' . ($saldo_cajas < 0 ? '(PERDIDA)' : ''), 1, 1, 'R');
 }
 
 $pdf->Ln(10);
@@ -126,13 +175,63 @@ if(!empty($cajas_cerradas)) {
     $pdf->SetFont('Arial', '', 8);
     
     foreach($cajas_cerradas as $caja) {
-        $saldo_caja = $caja['monto_final'] - $caja['monto_inicial'];
+        // Recalcular saldo para esta caja desde ventas y compras reales
+        $fecha_apertura = $caja['fecha'];
+        $fecha_cierre = isset($caja['fecha_cierre']) ? $caja['fecha_cierre'] : $fecha_hasta . ' 23:59:59';
+        
+        // Movimientos manuales
+        $stmt_mov = $pdo->prepare("SELECT * FROM caja_movimientos WHERE caja_id=?");
+        $stmt_mov->execute([$caja['id']]);
+        $movimientos = $stmt_mov->fetchAll();
+        
+        $ingresos_caja = 0;
+        $egresos_caja = 0;
+        foreach($movimientos as $m){
+            if($m['tipo']=='Ingreso') {
+                $ingresos_caja += (float)$m['monto'];
+            } else {
+                $egresos_caja += (float)$m['monto'];
+            }
+        }
+        
+        // Ventas
+        $stmt_ventas = $pdo->prepare("SELECT SUM(monto_total) as total 
+                                     FROM cabecera_factura_ventas 
+                                     WHERE fecha_hora >= ? AND fecha_hora <= ? AND (anulada = 0 OR anulada IS NULL)");
+        $stmt_ventas->execute([$fecha_apertura, $fecha_cierre]);
+        $ventas_data = $stmt_ventas->fetch();
+        $ingresos_caja += $ventas_data['total'] ? (float)$ventas_data['total'] : 0;
+        
+        // Compras
+        $stmt_compras = $pdo->prepare("SELECT SUM(total) as total 
+                                       FROM compras 
+                                       WHERE fecha >= ? AND fecha <= ?");
+        $stmt_compras->execute([$fecha_apertura, $fecha_cierre]);
+        $compras_data = $stmt_compras->fetch();
+        $egresos_caja += $compras_data['total'] ? (float)$compras_data['total'] : 0;
+        
+        // Facturas de compras - si existen
+        try {
+            $stmt_facturas_compras = $pdo->prepare("SELECT SUM(monto_total) as total 
+                                                    FROM cabecera_factura_compras 
+                                                    WHERE fecha_hora >= ? AND fecha_hora <= ?");
+            $stmt_facturas_compras->execute([$fecha_apertura, $fecha_cierre]);
+            $facturas_compras_data = $stmt_facturas_compras->fetch();
+            $egresos_caja += $facturas_compras_data['total'] ? (float)$facturas_compras_data['total'] : 0;
+        } catch (Exception $e) {
+            // Tabla no existe, continuar
+        }
+        
+        // Calcular monto final correcto
+        $monto_final_calculado = (float)$caja['monto_inicial'] + $ingresos_caja - $egresos_caja;
+        $saldo_caja = $monto_final_calculado - (float)$caja['monto_inicial'];
+        
         $pdf->SetFillColor($saldo_caja < 0 ? 255 : 240, $saldo_caja < 0 ? 220 : 240, $saldo_caja < 0 ? 220 : 240);
         $pdf->Cell(40, 6, date('d/m/Y H:i', strtotime($caja['fecha'])), 1, 0, 'C', true);
         $pdf->Cell(38, 6, number_format($caja['monto_inicial'], 0, ',', '.'), 1, 0, 'R', true);
-        $pdf->Cell(38, 6, number_format($caja['monto_final'], 0, ',', '.'), 1, 0, 'R', true);
+        $pdf->Cell(38, 6, number_format($monto_final_calculado, 0, ',', '.'), 1, 0, 'R', true);
         $pdf->Cell(38, 6, number_format($saldo_caja, 0, ',', '.'), 1, 0, 'R', true);
-        $pdf->Cell(36, 6, utf8_decode($saldo_caja < 0 ? 'PÉRDIDA' : 'GANANCIA'), 1, 1, 'C', true);
+        $pdf->Cell(36, 6, utf8_decode($saldo_caja < 0 ? 'PERDIDA' : 'GANANCIA'), 1, 1, 'C', true);
     }
     $pdf->Ln(5);
 }

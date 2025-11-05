@@ -112,8 +112,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     $timbrado = (string)$next_timbrado;
-    $inicio_vigencia = '2025-01-01';
-    $fin_vigencia = '2025-12-31';
+    // Generar fechas de vigencia (año completo: 01/01/YYYY al 31/12/YYYY)
+    $anio_actual = date('Y');
+    $inicio_vigencia = $anio_actual . '-01-01'; // Primer día del año
+    $fin_vigencia = $anio_actual . '-12-31'; // Último día del año
 
     $sql_cab = "INSERT INTO cabecera_factura_ventas
         (numero_factura, condicion_venta, forma_pago, fecha_hora, cliente_id, monto_total, timbrado, inicio_vigencia, fin_vigencia)

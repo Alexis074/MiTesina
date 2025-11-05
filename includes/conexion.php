@@ -1,4 +1,7 @@
 <?php
+// Configurar zona horaria
+date_default_timezone_set('America/Asuncion');
+
 // conexion.php - usa PDO
 $host = '127.0.0.1';
 $db   = 'db_repuestos';
