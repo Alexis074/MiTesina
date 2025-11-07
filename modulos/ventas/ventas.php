@@ -35,6 +35,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $ruc_cliente = isset($_POST['ruc']) ? $_POST['ruc'] : '';
     $condicion_venta = isset($_POST['condicion_venta']) ? $_POST['condicion_venta'] : 'Contado';
     $forma_pago = isset($_POST['forma_pago']) ? $_POST['forma_pago'] : 'Efectivo';
+    $numero_cuotas = isset($_POST['numero_cuotas']) ? (int)$_POST['numero_cuotas'] : 0;
+    
+    // Validar cuotas si es crédito
+    $es_credito = ($condicion_venta == 'Crédito' || ($forma_pago == 'Tarjeta' && isset($_POST['a_credito']) && $_POST['a_credito'] == '1'));
+    if ($es_credito && ($numero_cuotas < 2 || $numero_cuotas > 6)) {
+        $mensaje = "Error: El número de cuotas debe estar entre 2 y 6 meses.";
+    }
     
     // Obtener productos del carrito desde JSON
     $carrito_json = isset($_POST['carrito']) ? $_POST['carrito'] : '[]';
@@ -49,6 +56,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $total_venta = 0;
         $detalle = array();
 
+        // Primero calcular totales sin IVA
+        $total_sin_iva_venta = 0;
+        $total_5_venta = 0;
+        $total_exenta_venta = 0;
+        
+        foreach($carrito as $item) {
+            $subtotal = round($item['cantidad'] * $item['precio']);
+            $iva_val = isset($item['iva']) ? (string)$item['iva'] : '10';
+            
+            if ($iva_val === '5') {
+                $total_5_venta += $subtotal;
+            } elseif ($iva_val === 'exenta') {
+                $total_exenta_venta += $subtotal;
+            } else {
+                // IVA 10%
+                $total_sin_iva_venta += $subtotal;
+            }
+        }
+        
+        // Calcular IVA 10% como total_sin_iva / 11
+        $iva_10_total_venta = round($total_sin_iva_venta / 11);
+        // Calcular IVA 5% como total_5 / 21 (equivalente a / 1.05 * 0.05, pero usando método /21)
+        $iva_5_total_venta = round($total_5_venta / 21);
+        
+        // Ahora calcular detalle con IVA proporcional
         foreach($carrito as $item) {
             $prod_id = (int)$item['producto_id'];
             $cantidad = (float)$item['cantidad'];
@@ -57,11 +89,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $valor_5 = $valor_10 = $valor_exenta = 0;
             $iva_val = isset($item['iva']) ? (string)$item['iva'] : '10';
+            
             if ($iva_val === '5') {
-                $valor_5 = round($subtotal * 0.05);
+                // Calcular IVA 5% proporcional
+                if ($total_5_venta > 0) {
+                    $proporcion = $subtotal / $total_5_venta;
+                    $valor_5 = round($iva_5_total_venta * $proporcion);
+                }
                 $subtotal += $valor_5;
             } elseif ($iva_val === '10') {
-                $valor_10 = round($subtotal * 0.10);
+                // Calcular IVA 10% proporcional
+                if ($total_sin_iva_venta > 0) {
+                    $proporcion = $subtotal / $total_sin_iva_venta;
+                    $valor_10 = round($iva_10_total_venta * $proporcion);
+                }
                 $subtotal += $valor_10;
             } else {
                 $valor_exenta = $subtotal;
@@ -165,11 +206,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ));
         }
 
+        // Si es venta a crédito, crear registro de crédito y cuotas
+        if ($es_credito && $numero_cuotas >= 2 && $numero_cuotas <= 6) {
+            try {
+                $monto_cuota = round($total_venta / $numero_cuotas);
+                $monto_ultima_cuota = $total_venta - ($monto_cuota * ($numero_cuotas - 1));
+                
+                // Insertar venta a crédito
+                $sql_credito = "INSERT INTO ventas_credito 
+                               (factura_id, cliente_id, monto_total, numero_cuotas, monto_cuota, fecha_creacion, estado)
+                               VALUES (:factura_id, :cliente_id, :monto_total, :numero_cuotas, :monto_cuota, :fecha_creacion, 'Activa')";
+                $stmt_credito = $pdo->prepare($sql_credito);
+                $stmt_credito->execute([
+                    'factura_id' => $factura_id,
+                    'cliente_id' => $cliente_id,
+                    'monto_total' => $total_venta,
+                    'numero_cuotas' => $numero_cuotas,
+                    'monto_cuota' => $monto_cuota,
+                    'fecha_creacion' => $fecha
+                ]);
+                $venta_credito_id = $pdo->lastInsertId();
+                
+                // Crear cuotas (30 días entre cada una)
+                $fecha_base = new DateTime($fecha);
+                for ($i = 1; $i <= $numero_cuotas; $i++) {
+                    $fecha_vencimiento = clone $fecha_base;
+                    $fecha_vencimiento->modify('+' . ($i * 30) . ' days');
+                    
+                    $monto_cuota_actual = ($i == $numero_cuotas) ? $monto_ultima_cuota : $monto_cuota;
+                    
+                    $sql_cuota = "INSERT INTO cuotas_credito 
+                                 (venta_credito_id, numero_cuota, monto, fecha_vencimiento, estado)
+                                 VALUES (:venta_credito_id, :numero_cuota, :monto, :fecha_vencimiento, 'Pendiente')";
+                    $stmt_cuota = $pdo->prepare($sql_cuota);
+                    $stmt_cuota->execute([
+                        'venta_credito_id' => $venta_credito_id,
+                        'numero_cuota' => $i,
+                        'monto' => $monto_cuota_actual,
+                        'fecha_vencimiento' => $fecha_vencimiento->format('Y-m-d')
+                    ]);
+                }
+                
+            } catch (Exception $e) {
+                error_log("Error al crear crédito: " . $e->getMessage());
+                // Continuar aunque falle la creación de crédito
+            }
+        }
+
         // Registrar en auditoría
         include $base_path . 'includes/auditoria.php';
         registrarAuditoria('crear', 'ventas', 'Factura #' . $numero_factura . ' creada. Cliente ID: ' . $cliente_id . ', Total: ' . number_format($total_venta,0,',','.'));
         
         $mensaje = "Venta registrada. Factura: $numero_factura Total: ".number_format($total_venta,0,',','.');
+        if ($es_credito) {
+            $mensaje .= " - Crédito a $numero_cuotas cuotas creado.";
+        }
         
         // Recargar para mostrar la nueva venta
         header("Location: ventas.php?success=1&factura_id=".$factura_id);
@@ -316,6 +407,25 @@ if (isset($_GET['success']) && isset($_GET['factura_id'])) {
                         <option value="Efectivo" selected>Efectivo</option>
                         <option value="Tarjeta">Tarjeta</option>
                         <option value="Transferencia">Transferencia</option>
+                    </select>
+                </div>
+                
+                <!-- Campos para crédito -->
+                <div id="campo_a_credito" class="form-group-horizontal" style="display:none;">
+                    <label>
+                        <input type="checkbox" name="a_credito" id="checkbox_a_credito" value="1" style="margin-right: 5px;">
+                        A Crédito
+                    </label>
+                </div>
+                
+                <div id="campo_cuotas" class="form-group-horizontal" style="display:none;">
+                    <label>Número de Cuotas:</label>
+                    <select name="numero_cuotas" id="select_cuotas" class="form-select-horizontal">
+                        <option value="2">2 meses</option>
+                        <option value="3">3 meses</option>
+                        <option value="4">4 meses</option>
+                        <option value="5">5 meses</option>
+                        <option value="6" selected>6 meses</option>
                     </select>
                 </div>
                 
@@ -709,22 +819,53 @@ function actualizarCarrito() {
     carritoVacio.style.display = 'none';
     tablaCarrito.style.display = 'table';
     
+    // Calcular totales sin IVA primero
+    var totalSinIva = 0;
+    var total5 = 0;
+    var totalExenta = 0;
+    
+    carrito.forEach(function(item) {
+        var subtotal = item.cantidad * item.precio;
+        if (item.iva === '5') {
+            total5 += subtotal;
+        } else if (item.iva === 'exenta') {
+            totalExenta += subtotal;
+        } else {
+            // IVA 10%
+            totalSinIva += subtotal;
+        }
+    });
+    
+    // Calcular IVA total
+    var iva10 = Math.round(totalSinIva / 11);
+    var iva5 = Math.round(total5 / 21);
+    var totalConIva = totalSinIva + iva10 + total5 + iva5 + totalExenta;
+    
+    // Mostrar productos en la tabla
     carrito.forEach(function(item, index) {
         var subtotal = item.cantidad * item.precio;
-        var subtotalConIva = subtotal;
         var ivaTexto = '';
+        var subtotalMostrar = subtotal;
         
         if (item.iva === '5') {
-            subtotalConIva = Math.round(subtotal * 1.05);
             ivaTexto = '5%';
+            // Calcular IVA 5% proporcional
+            if (total5 > 0) {
+                var proporcion = subtotal / total5;
+                var ivaProporcional = Math.round(iva5 * proporcion);
+                subtotalMostrar = subtotal + ivaProporcional;
+            }
         } else if (item.iva === '10') {
-            subtotalConIva = Math.round(subtotal * 1.10);
             ivaTexto = '10%';
+            // Calcular IVA 10% proporcional
+            if (totalSinIva > 0) {
+                var proporcion = subtotal / totalSinIva;
+                var ivaProporcional = Math.round(iva10 * proporcion);
+                subtotalMostrar = subtotal + ivaProporcional;
+            }
         } else {
             ivaTexto = 'Exenta';
         }
-        
-        totalCarrito += subtotalConIva;
         
         var row = document.createElement('tr');
         row.innerHTML = 
@@ -732,12 +873,12 @@ function actualizarCarrito() {
             '<td>' + item.cantidad + '</td>' +
             '<td>' + item.precio.toLocaleString('es-PY') + '</td>' +
             '<td>' + ivaTexto + '</td>' +
-            '<td>' + subtotalConIva.toLocaleString('es-PY') + ' Gs</td>' +
+            '<td>' + subtotalMostrar.toLocaleString('es-PY') + ' Gs</td>' +
             '<td><button type="button" class="btn-eliminar-item" onclick="eliminarDelCarrito(' + index + ')"><i class="fas fa-trash"></i></button></td>';
         carritoBody.appendChild(row);
     });
     
-    document.getElementById('total_carrito').textContent = totalCarrito.toLocaleString('es-PY') + ' Gs';
+    document.getElementById('total_carrito').textContent = totalConIva.toLocaleString('es-PY') + ' Gs';
     
     // Actualizar JSON oculto
     document.getElementById('input_carrito_json').value = JSON.stringify(carrito);
@@ -768,6 +909,41 @@ document.getElementById('form_agregar_producto').addEventListener('submit', func
     e.preventDefault();
 });
 
+// Mostrar/ocultar campos de crédito
+function actualizarCamposCredito() {
+    var condicion = document.getElementById('select_condicion').value;
+    var formaPago = document.getElementById('select_forma_pago').value;
+    var campoCredito = document.getElementById('campo_a_credito');
+    var campoCuotas = document.getElementById('campo_cuotas');
+    var checkboxCredito = document.getElementById('checkbox_a_credito');
+    
+    if (condicion === 'Crédito' || (formaPago === 'Tarjeta')) {
+        if (formaPago === 'Tarjeta') {
+            campoCredito.style.display = 'flex';
+        } else {
+            campoCredito.style.display = 'none';
+            checkboxCredito.checked = false;
+        }
+        
+        if (condicion === 'Crédito' || checkboxCredito.checked) {
+            campoCuotas.style.display = 'flex';
+            if (!checkboxCredito.checked && condicion === 'Crédito') {
+                checkboxCredito.checked = true;
+            }
+        } else {
+            campoCuotas.style.display = 'none';
+        }
+    } else {
+        campoCredito.style.display = 'none';
+        campoCuotas.style.display = 'none';
+        checkboxCredito.checked = false;
+    }
+}
+
+document.getElementById('select_condicion').addEventListener('change', actualizarCamposCredito);
+document.getElementById('select_forma_pago').addEventListener('change', actualizarCamposCredito);
+document.getElementById('checkbox_a_credito').addEventListener('change', actualizarCamposCredito);
+
 // Validar caja antes de confirmar venta
 var cajaAbierta = <?php echo $caja_abierta ? 'true' : 'false'; ?>;
 document.getElementById('form_venta_final').addEventListener('submit', function(e) {
@@ -777,10 +953,25 @@ document.getElementById('form_venta_final').addEventListener('submit', function(
         window.location.href = '/repuestos/modulos/caja/caja.php';
         return false;
     }
+    
+    // Validar cuotas si es crédito
+    var condicion = document.getElementById('select_condicion').value;
+    var checkboxCredito = document.getElementById('checkbox_a_credito');
+    var esCredito = (condicion === 'Crédito' || checkboxCredito.checked);
+    
+    if (esCredito) {
+        var numeroCuotas = parseInt(document.getElementById('select_cuotas').value);
+        if (numeroCuotas < 2 || numeroCuotas > 6) {
+            e.preventDefault();
+            alert('ERROR: El número de cuotas debe estar entre 2 y 6 meses.');
+            return false;
+        }
+    }
 });
 
 // Inicializar
 actualizarCarrito();
+actualizarCamposCredito();
 </script>
 
 <?php include $base_path . 'includes/footer.php'; ?>

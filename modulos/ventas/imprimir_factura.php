@@ -190,40 +190,71 @@ tfoot td { font-weight:bold; text-align:left; }
         </thead>
         <tbody>
         <?php
-        $base_exenta = 0.0;
-        $base_5 = 0.0;
-        $base_10 = 0.0;
+        $subtotal_sin_iva = 0.0;
+        $total_iva_5 = 0.0;
+        $total_iva_10 = 0.0;
+        $total_exenta = 0.0;
+        $total_factura = 0.0;
 
         foreach($detalle as $d) {
             $v5 = isset($d['valor_venta_5']) ? (float)$d['valor_venta_5'] : 0.0;
             $v10 = isset($d['valor_venta_10']) ? (float)$d['valor_venta_10'] : 0.0;
             $vex = isset($d['valor_venta_exenta']) ? (float)$d['valor_venta_exenta'] : 0.0;
+            
+            // Calcular base sin IVA (precio * cantidad)
+            $precio_unitario = (float)$d['precio_unitario'];
+            $cantidad = (int)$d['cantidad'];
+            $subtotal_sin_iva_producto = $precio_unitario * $cantidad;
+            $subtotal_sin_iva += $subtotal_sin_iva_producto;
+            
+            $total_iva_5 += $v5;
+            $total_iva_10 += $v10;
+            $total_exenta += $vex;
+            $total_factura += (float)$d['total_parcial'];
 
-            if($v5>0) $base_5 += (float)$d['total_parcial'];
-            elseif($v10>0) $base_10 += (float)$d['total_parcial'];
-            else $base_exenta += $vex;
-
+            // Mostrar el subtotal sin IVA en la tabla (solo precio * cantidad)
             echo '<tr>';
             echo '<td>'.htmlspecialchars($d['nombre']).'</td>';
             echo '<td>'.(int)$d['cantidad'].'</td>';
             echo '<td>'.number_format((float)$d['precio_unitario'],0,',','.').'</td>';
             if($v5>0) $iva_text='5%'; elseif($v10>0) $iva_text='10%'; else $iva_text='Exenta';
             echo '<td>'.$iva_text.'</td>';
-            echo '<td>'.number_format((float)$d['total_parcial'],0,',','.').'</td>';
+            echo '<td>'.number_format($subtotal_sin_iva_producto,0,',','.').'</td>';
             echo '</tr>';
         }
-
-        $iva_5 = $base_5 * 0.05;
-        $iva_10 = $base_10 * 0.10;
-        $total_factura = $base_exenta + $base_5 + $iva_5 + $base_10 + $iva_10;
+        
+        // Calcular total correcto: subtotal sin IVA + IVAs
+        $total_factura = $subtotal_sin_iva + $total_iva_5 + $total_iva_10 + $total_exenta;
         $total_letras = numero_a_letras($total_factura);
         ?>
         </tbody>
         <tfoot>
-            <tr><td colspan="4" style="text-align:right;">Total Exentas:</td><td><?php echo number_format($base_exenta,0,',','.'); ?></td></tr>
-            <tr><td colspan="4" style="text-align:right;">IVA 5%:</td><td><?php echo number_format($iva_5,0,',','.'); ?></td></tr>
-            <tr><td colspan="4" style="text-align:right;">IVA 10%:</td><td><?php echo number_format($iva_10,0,',','.'); ?></td></tr>
-            <tr><td colspan="4" style="text-align:right;"><strong>TOTAL:</strong></td><td><strong><?php echo number_format($total_factura,0,',','.'); ?></strong></td></tr>
+            <tr>
+                <td colspan="4" style="text-align:right;"><strong>Subtotal:</strong></td>
+                <td><strong><?php echo number_format($subtotal_sin_iva,0,',','.'); ?></strong></td>
+            </tr>
+            <?php if ($total_iva_5 > 0): ?>
+            <tr>
+                <td colspan="4" style="text-align:right;"><strong>IVA 5%:</strong></td>
+                <td><strong><?php echo number_format($total_iva_5,0,',','.'); ?></strong></td>
+            </tr>
+            <?php endif; ?>
+            <?php if ($total_iva_10 > 0): ?>
+            <tr>
+                <td colspan="4" style="text-align:right;"><strong>IVA 10%:</strong></td>
+                <td><strong><?php echo number_format($total_iva_10,0,',','.'); ?></strong></td>
+            </tr>
+            <?php endif; ?>
+            <?php if ($total_exenta > 0): ?>
+            <tr>
+                <td colspan="4" style="text-align:right;"><strong>Exenta:</strong></td>
+                <td><strong><?php echo number_format($total_exenta,0,',','.'); ?></strong></td>
+            </tr>
+            <?php endif; ?>
+            <tr>
+                <td colspan="4" style="text-align:right;"><strong>TOTAL:</strong></td>
+                <td><strong><?php echo number_format($total_factura,0,',','.'); ?></strong></td>
+            </tr>
             <tr><td colspan="5" style="text-align:left; font-weight:bold;">TOTAL (en letras): <?php echo $total_letras; ?></td></tr>
         </tfoot>
     </table>

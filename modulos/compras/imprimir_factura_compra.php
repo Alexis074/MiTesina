@@ -203,28 +203,91 @@ tfoot td { font-weight:bold; text-align:left; }
                 <th>Producto</th>
                 <th>Cant.</th>
                 <th>Precio Unitario</th>
+                <th>IVA</th>
                 <th>Subtotal</th>
             </tr>
         </thead>
         <tbody>
         <?php
+        $subtotal_sin_iva = 0.0;
+        $total_iva_5 = 0.0;
+        $total_iva_10 = 0.0;
+        $total_exenta = 0.0;
         $total_factura = 0.0;
+        
         foreach($detalle as $d) {
-            $subtotal = (float)$d['subtotal'];
-            $total_factura += $subtotal;
+            $precio_unitario = (float)$d['precio_unitario'];
+            $cantidad = (float)$d['cantidad'];
+            $subtotal_producto = (float)$d['subtotal'];
+            
+            // Calcular subtotal sin IVA (precio * cantidad)
+            $subtotal_sin_iva_producto = $precio_unitario * $cantidad;
+            $subtotal_sin_iva += $subtotal_sin_iva_producto;
+            
+            // Obtener valores de IVA (compatibilidad con registros antiguos)
+            $valor_compra_5 = isset($d['valor_compra_5']) ? (float)$d['valor_compra_5'] : 0;
+            $valor_compra_10 = isset($d['valor_compra_10']) ? (float)$d['valor_compra_10'] : 0;
+            $valor_compra_exenta = isset($d['valor_compra_exenta']) ? (float)$d['valor_compra_exenta'] : 0;
+            
+            // Si no tiene IVA definido, calcular desde el total (compatibilidad con registros antiguos)
+            if ($valor_compra_5 == 0 && $valor_compra_10 == 0 && $valor_compra_exenta == 0) {
+                if ($subtotal_producto > $subtotal_sin_iva_producto) {
+                    // Asumir que la diferencia es IVA 10% por compatibilidad
+                    $valor_compra_10 = $subtotal_producto - $subtotal_sin_iva_producto;
+                }
+            }
+            
+            $total_iva_5 += $valor_compra_5;
+            $total_iva_10 += $valor_compra_10;
+            $total_exenta += $valor_compra_exenta;
+            $total_factura += $subtotal_producto;
+            
+            $iva_texto = '';
+            if ($valor_compra_5 > 0) {
+                $iva_texto = '5%';
+            } elseif ($valor_compra_10 > 0) {
+                $iva_texto = '10%';
+            } else {
+                $iva_texto = 'Exenta';
+            }
+            
+            // Mostrar el subtotal sin IVA en la tabla (solo precio * cantidad)
             echo '<tr>';
             echo '<td>'.htmlspecialchars($d['nombre']).'</td>';
-            echo '<td>'.number_format((float)$d['cantidad'], 2, ',', '.').'</td>';
-            echo '<td>'.number_format((float)$d['precio_unitario'],0,',','.').'</td>';
-            echo '<td>'.number_format($subtotal,0,',','.').'</td>';
+            echo '<td>'.number_format($cantidad, 2, ',', '.').'</td>';
+            echo '<td>'.number_format($precio_unitario,0,',','.').'</td>';
+            echo '<td>'.$iva_texto.'</td>';
+            echo '<td>'.number_format($subtotal_sin_iva_producto,0,',','.').'</td>';
             echo '</tr>';
         }
+        
+        // Calcular total correcto: subtotal sin IVA + IVAs
+        $total_factura = $subtotal_sin_iva + $total_iva_5 + $total_iva_10 + $total_exenta;
         $total_letras = numero_a_letras($total_factura);
         ?>
         </tbody>
         <tfoot>
-            <tr><td colspan="3" style="text-align:right;"><strong>TOTAL:</strong></td><td><strong><?php echo number_format($total_factura,0,',','.'); ?></strong></td></tr>
-            <tr><td colspan="4" style="text-align:left; font-weight:bold;">TOTAL (en letras): <?php echo $total_letras; ?></td></tr>
+            <tr>
+                <td colspan="4" style="text-align:right;"><strong>Subtotal:</strong></td>
+                <td><strong><?php echo number_format($subtotal_sin_iva,0,',','.'); ?></strong></td>
+            </tr>
+            <tr>
+                <td colspan="4" style="text-align:right;"><strong>Exenta:</strong></td>
+                <td><strong><?php echo number_format($total_exenta,0,',','.'); ?></strong></td>
+            </tr>
+            <tr>
+                <td colspan="4" style="text-align:right;"><strong>IVA 5%:</strong></td>
+                <td><strong><?php echo number_format($total_iva_5,0,',','.'); ?></strong></td>
+            </tr>
+            <tr>
+                <td colspan="4" style="text-align:right;"><strong>IVA 10%:</strong></td>
+                <td><strong><?php echo number_format($total_iva_10,0,',','.'); ?></strong></td>
+            </tr>
+            <tr>
+                <td colspan="4" style="text-align:right;"><strong>TOTAL:</strong></td>
+                <td><strong><?php echo number_format($total_factura,0,',','.'); ?></strong></td>
+            </tr>
+            <tr><td colspan="5" style="text-align:left; font-weight:bold;">TOTAL (en letras): <?php echo $total_letras; ?></td></tr>
         </tfoot>
     </table>
 

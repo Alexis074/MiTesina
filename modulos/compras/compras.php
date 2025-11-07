@@ -28,6 +28,47 @@ $productos = $productos_stmt->fetchAll();
 $caja_stmt = $pdo->query("SELECT * FROM caja WHERE estado='Abierta' ORDER BY id DESC LIMIT 1");
 $caja_abierta = $caja_stmt->fetch();
 
+// Calcular saldo disponible en caja si está abierta
+$saldo_disponible_caja = 0;
+if ($caja_abierta) {
+    $fecha_apertura = $caja_abierta['fecha'];
+    
+    // Calcular ingresos totales
+    $total_ingresos = 0;
+    $stmt_ingresos = $pdo->prepare("SELECT SUM(monto) as total FROM caja_movimientos WHERE caja_id=? AND tipo='Ingreso'");
+    $stmt_ingresos->execute([$caja_abierta['id']]);
+    $ingresos_manual = $stmt_ingresos->fetch();
+    $total_ingresos += $ingresos_manual['total'] ? (float)$ingresos_manual['total'] : 0;
+    
+    $stmt_ventas = $pdo->prepare("SELECT SUM(monto_total) as total FROM cabecera_factura_ventas WHERE fecha_hora >= ? AND (anulada = 0 OR anulada IS NULL)");
+    $stmt_ventas->execute([$fecha_apertura]);
+    $ventas_data = $stmt_ventas->fetch();
+    $total_ingresos += $ventas_data['total'] ? (float)$ventas_data['total'] : 0;
+    
+    // Calcular egresos totales
+    $total_egresos = 0;
+    $stmt_egresos = $pdo->prepare("SELECT SUM(monto) as total FROM caja_movimientos WHERE caja_id=? AND tipo='Egreso'");
+    $stmt_egresos->execute([$caja_abierta['id']]);
+    $egresos_manual = $stmt_egresos->fetch();
+    $total_egresos += $egresos_manual['total'] ? (float)$egresos_manual['total'] : 0;
+    
+    $stmt_compras = $pdo->prepare("SELECT SUM(total) as total FROM compras WHERE fecha >= ?");
+    $stmt_compras->execute([$fecha_apertura]);
+    $compras_data = $stmt_compras->fetch();
+    $total_egresos += $compras_data['total'] ? (float)$compras_data['total'] : 0;
+    
+    try {
+        $stmt_facturas_compras = $pdo->prepare("SELECT SUM(monto_total) as total FROM cabecera_factura_compras WHERE fecha_hora >= ?");
+        $stmt_facturas_compras->execute([$fecha_apertura]);
+        $facturas_compras_data = $stmt_facturas_compras->fetch();
+        $total_egresos += $facturas_compras_data['total'] ? (float)$facturas_compras_data['total'] : 0;
+    } catch (Exception $e) {
+        // Tabla no existe, continuar
+    }
+    
+    $saldo_disponible_caja = (float)$caja_abierta['monto_inicial'] + $total_ingresos - $total_egresos;
+}
+
 // Obtener compras recientes (últimas 20)
 $stmt_compras_recientes = $pdo->query("SELECT c.*, p.empresa as nombre_proveedor 
                                        FROM compras c
@@ -58,16 +99,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (empty($carrito) || !is_array($carrito)) {
         $mensaje = "Error: El carrito está vacío.";
+    } elseif (!$caja_abierta) {
+        $mensaje = "Error: Debe abrir la caja antes de realizar una compra.";
     } else {
         $fecha = date("Y-m-d H:i:s");
         
-        // Calcular total de la compra
-        $total_compra = 0;
+        // Calcular total de la compra con IVA
+        // Primero sumar todos los subtotales sin IVA
+        $total_5 = 0;
+        $total_10 = 0;
+        $total_exenta = 0;
         foreach($carrito as $item) {
-            $total_compra += $item['cantidad'] * $item['precio'];
+            $subtotal = $item['cantidad'] * $item['precio'];
+            $iva_val = isset($item['iva']) ? (string)$item['iva'] : '10';
+            
+            if ($iva_val === 'exenta') {
+                $total_exenta += $subtotal;
+            } elseif ($iva_val === '5') {
+                $total_5 += $subtotal;
+            } else {
+                // IVA 10%
+                $total_10 += $subtotal;
+            }
         }
+        
+        // Calcular IVA 5% como total_5 / 21
+        $iva_5 = round($total_5 / 21);
+        // Calcular IVA 10% como total_10 / 11
+        $iva_10 = round($total_10 / 11);
+        
+        // Total final = subtotales sin IVA + IVA 5% + IVA 10% + exentas
+        $total_compra = $total_5 + $iva_5 + $total_10 + $iva_10 + $total_exenta;
 
-        // Insertar compra incluyendo total
+        // Validar saldo disponible en caja
+        $fecha_apertura = $caja_abierta['fecha'];
+        
+        // Calcular ingresos totales (movimientos manuales + ventas)
+        $total_ingresos = 0;
+        $stmt_ingresos = $pdo->prepare("SELECT SUM(monto) as total FROM caja_movimientos WHERE caja_id=? AND tipo='Ingreso'");
+        $stmt_ingresos->execute([$caja_abierta['id']]);
+        $ingresos_manual = $stmt_ingresos->fetch();
+        $total_ingresos += $ingresos_manual['total'] ? (float)$ingresos_manual['total'] : 0;
+        
+        $stmt_ventas = $pdo->prepare("SELECT SUM(monto_total) as total FROM cabecera_factura_ventas WHERE fecha_hora >= ? AND (anulada = 0 OR anulada IS NULL)");
+        $stmt_ventas->execute([$fecha_apertura]);
+        $ventas_data = $stmt_ventas->fetch();
+        $total_ingresos += $ventas_data['total'] ? (float)$ventas_data['total'] : 0;
+        
+        // Calcular egresos totales (movimientos manuales + compras + facturas de compras)
+        $total_egresos = 0;
+        $stmt_egresos = $pdo->prepare("SELECT SUM(monto) as total FROM caja_movimientos WHERE caja_id=? AND tipo='Egreso'");
+        $stmt_egresos->execute([$caja_abierta['id']]);
+        $egresos_manual = $stmt_egresos->fetch();
+        $total_egresos += $egresos_manual['total'] ? (float)$egresos_manual['total'] : 0;
+        
+        $stmt_compras = $pdo->prepare("SELECT SUM(total) as total FROM compras WHERE fecha >= ?");
+        $stmt_compras->execute([$fecha_apertura]);
+        $compras_data = $stmt_compras->fetch();
+        $total_egresos += $compras_data['total'] ? (float)$compras_data['total'] : 0;
+        
+        try {
+            $stmt_facturas_compras = $pdo->prepare("SELECT SUM(monto_total) as total FROM cabecera_factura_compras WHERE fecha_hora >= ?");
+            $stmt_facturas_compras->execute([$fecha_apertura]);
+            $facturas_compras_data = $stmt_facturas_compras->fetch();
+            $total_egresos += $facturas_compras_data['total'] ? (float)$facturas_compras_data['total'] : 0;
+        } catch (Exception $e) {
+            // Tabla no existe, continuar
+        }
+        
+        // Calcular saldo disponible
+        $saldo_disponible = (float)$caja_abierta['monto_inicial'] + $total_ingresos - $total_egresos;
+        
+        // Validar que el saldo disponible sea suficiente
+        if ($total_compra > $saldo_disponible) {
+            $mensaje = "Error: Saldo insuficiente en caja. Saldo disponible: " . number_format($saldo_disponible, 0, ',', '.') . " Gs. Monto de compra: " . number_format($total_compra, 0, ',', '.') . " Gs.";
+        } else {
+            // Insertar compra incluyendo total
         $sql_compra = "INSERT INTO compras (proveedor_id, fecha, total) VALUES (:proveedor_id, :fecha, :total)";
         $stmt_compra = $pdo->prepare($sql_compra);
         $stmt_compra->execute([
@@ -137,20 +244,103 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
             $factura_id = $pdo->lastInsertId();
             
-            // Insertar detalles de factura
+            // Calcular totales para IVA (sumar todos los productos)
+            $total_5_factura = 0;
+            $total_10_factura = 0;
+            $total_exenta_factura = 0;
             foreach($carrito as $item) {
                 $subtotal = $item['cantidad'] * $item['precio'];
-                $sql_detalle_factura = "INSERT INTO detalle_factura_compras 
-                                        (factura_id, producto_id, cantidad, precio_unitario, subtotal)
-                                        VALUES (:factura_id, :producto_id, :cantidad, :precio_unitario, :subtotal)";
-                $stmt_detalle_factura = $pdo->prepare($sql_detalle_factura);
-                $stmt_detalle_factura->execute([
-                    'factura_id' => $factura_id,
-                    'producto_id' => $item['producto_id'],
-                    'cantidad' => $item['cantidad'],
-                    'precio_unitario' => $item['precio'],
-                    'subtotal' => $subtotal
-                ]);
+                $iva_val = isset($item['iva']) ? (string)$item['iva'] : '10';
+                
+                if ($iva_val === 'exenta') {
+                    $total_exenta_factura += $subtotal;
+                } elseif ($iva_val === '5') {
+                    $total_5_factura += $subtotal;
+                } else {
+                    $total_10_factura += $subtotal;
+                }
+            }
+            
+            // Calcular IVA 5% total como total_5 / 21
+            $iva_5_total = round($total_5_factura / 21);
+            // Calcular IVA 10% total como total_10 / 11
+            $iva_10_total = round($total_10_factura / 11);
+            
+            // Insertar detalles de factura con IVA proporcional
+            foreach($carrito as $item) {
+                $subtotal = $item['cantidad'] * $item['precio'];
+                $iva_val = isset($item['iva']) ? (string)$item['iva'] : '10';
+                
+                $valor_compra_5 = 0;
+                $valor_compra_10 = 0;
+                $valor_compra_exenta = 0;
+                $subtotal_final = $subtotal;
+                
+                if ($iva_val === '5' && $total_5_factura > 0) {
+                    // Calcular IVA 5% proporcional para este producto
+                    $proporcion = $subtotal / $total_5_factura;
+                    $valor_compra_5 = round($iva_5_total * $proporcion);
+                    $subtotal_final = $subtotal + $valor_compra_5;
+                } elseif ($iva_val === '10' && $total_10_factura > 0) {
+                    // Calcular IVA 10% proporcional para este producto
+                    $proporcion = $subtotal / $total_10_factura;
+                    $valor_compra_10 = round($iva_10_total * $proporcion);
+                    $subtotal_final = $subtotal + $valor_compra_10;
+                } else {
+                    // Exenta
+                    $valor_compra_exenta = $subtotal;
+                }
+                
+                try {
+                    $sql_detalle_factura = "INSERT INTO detalle_factura_compras 
+                                            (factura_id, producto_id, cantidad, precio_unitario, subtotal, valor_compra_5, valor_compra_10, valor_compra_exenta)
+                                            VALUES (:factura_id, :producto_id, :cantidad, :precio_unitario, :subtotal, :valor_compra_5, :valor_compra_10, :valor_compra_exenta)";
+                    $stmt_detalle_factura = $pdo->prepare($sql_detalle_factura);
+                    $stmt_detalle_factura->execute([
+                        'factura_id' => $factura_id,
+                        'producto_id' => $item['producto_id'],
+                        'cantidad' => $item['cantidad'],
+                        'precio_unitario' => $item['precio'],
+                        'subtotal' => $subtotal_final,
+                        'valor_compra_5' => $valor_compra_5,
+                        'valor_compra_10' => $valor_compra_10,
+                        'valor_compra_exenta' => $valor_compra_exenta
+                    ]);
+                } catch (PDOException $e) {
+                    // Si las columnas de IVA no existen, intentar sin valor_compra_5 (compatibilidad)
+                    try {
+                        $sql_detalle_factura = "INSERT INTO detalle_factura_compras 
+                                                (factura_id, producto_id, cantidad, precio_unitario, subtotal, valor_compra_10, valor_compra_exenta)
+                                                VALUES (:factura_id, :producto_id, :cantidad, :precio_unitario, :subtotal, :valor_compra_10, :valor_compra_exenta)";
+                        $stmt_detalle_factura = $pdo->prepare($sql_detalle_factura);
+                        $stmt_detalle_factura->execute([
+                            'factura_id' => $factura_id,
+                            'producto_id' => $item['producto_id'],
+                            'cantidad' => $item['cantidad'],
+                            'precio_unitario' => $item['precio'],
+                            'subtotal' => $subtotal_final,
+                            'valor_compra_10' => $valor_compra_10,
+                            'valor_compra_exenta' => $valor_compra_exenta
+                        ]);
+                    } catch (PDOException $e2) {
+                        // Si tampoco funciona, insertar sin columnas de IVA (compatibilidad máxima)
+                        try {
+                            $sql_detalle_factura = "INSERT INTO detalle_factura_compras 
+                                                    (factura_id, producto_id, cantidad, precio_unitario, subtotal)
+                                                    VALUES (:factura_id, :producto_id, :cantidad, :precio_unitario, :subtotal)";
+                            $stmt_detalle_factura = $pdo->prepare($sql_detalle_factura);
+                            $stmt_detalle_factura->execute([
+                                'factura_id' => $factura_id,
+                                'producto_id' => $item['producto_id'],
+                                'cantidad' => $item['cantidad'],
+                                'precio_unitario' => $item['precio'],
+                                'subtotal' => $subtotal_final
+                            ]);
+                        } catch (PDOException $e3) {
+                            error_log("Error al insertar detalle de factura de compra: " . $e3->getMessage());
+                        }
+                    }
+                }
             }
         } catch (Exception $e) {
             // Si la tabla no existe, continuar sin crear factura (se creará después)
@@ -219,10 +409,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
         }
 
-        // Guardar mensaje en sesión y redirigir
-        $_SESSION['mensaje'] = "Compra registrada correctamente. Total: " . number_format($total_compra, 0, ',', '.') . " Gs";
-        header("Location: compras.php?success=1&compra_id=".$compra_id);
-        exit();
+            // Guardar mensaje en sesión y redirigir
+            $_SESSION['mensaje'] = "Compra registrada correctamente. Total: " . number_format($total_compra, 0, ',', '.') . " Gs";
+            header("Location: compras.php?success=1&compra_id=".$compra_id);
+            exit();
+        }
     }
 }
 
@@ -280,6 +471,15 @@ if (isset($_GET['success']) && isset($_GET['compra_id'])) {
                     <input type="number" id="input_precio" class="form-input-horizontal" step="0.01" min="0" required>
                 </div>
                 
+        <div class="form-group-horizontal">
+            <label>IVA:</label>
+            <select id="select_iva" class="form-select-horizontal" required>
+                <option value="5">5%</option>
+                <option value="10" selected>10%</option>
+                <option value="exenta">Exenta</option>
+            </select>
+        </div>
+                
                 <div class="form-group-horizontal">
                     <label>&nbsp;</label>
                     <button type="button" id="btn_agregar_carrito" class="btn-agregar-carrito">
@@ -309,6 +509,7 @@ if (isset($_GET['success']) && isset($_GET['compra_id'])) {
                     <th>Producto</th>
                     <th>Cantidad</th>
                     <th>Precio Unit.</th>
+                    <th>IVA</th>
                     <th>Subtotal</th>
                     <th>Acciones</th>
                 </tr>
@@ -317,7 +518,7 @@ if (isset($_GET['success']) && isset($_GET['compra_id'])) {
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="3" style="text-align:right;"><strong>TOTAL:</strong></td>
+                    <td colspan="4" style="text-align:right;"><strong>TOTAL:</strong></td>
                     <td id="total_carrito" style="font-weight:bold; font-size:18px;">0</td>
                     <td></td>
                 </tr>
@@ -353,6 +554,12 @@ if (isset($_GET['success']) && isset($_GET['compra_id'])) {
             <div style="padding: 10px; background: #f0f9ff; border-radius: 5px; margin: 10px 0; font-size: 13px; color: #0369a1;">
                 <i class="fas fa-info-circle"></i> <strong>Nota:</strong> El número de factura y timbrado se generarán automáticamente al confirmar la compra.
             </div>
+            
+            <?php if ($caja_abierta): ?>
+            <div id="info_saldo_caja" style="padding: 10px; background: #fff7ed; border-left: 4px solid #f59e0b; border-radius: 5px; margin: 10px 0; font-size: 13px; color: #92400e;">
+                <i class="fas fa-wallet"></i> <strong>Saldo disponible en caja:</strong> <span id="saldo_disponible_texto"><?= number_format($saldo_disponible_caja, 0, ',', '.') ?> Gs</span>
+            </div>
+            <?php endif; ?>
             
             <div class="form-row-horizontal">
                 <div class="form-group-horizontal">
@@ -682,6 +889,7 @@ input[type="number"].form-input-horizontal::-webkit-inner-spin-button {
 // Variables globales
 var carrito = [];
 var proveedorSeleccionado = null;
+var saldoDisponible = <?php echo $saldo_disponible_caja; ?>;
 
 // Datos de productos y proveedores desde PHP
 var productos = <?php echo json_encode($productos); ?>;
@@ -722,6 +930,7 @@ document.getElementById('btn_agregar_carrito').addEventListener('click', functio
     var selectProducto = document.getElementById('select_producto');
     var inputCantidad = document.getElementById('input_cantidad');
     var inputPrecio = document.getElementById('input_precio');
+    var selectIva = document.getElementById('select_iva');
     
     if (!proveedorSeleccionado) {
         alert('Por favor, seleccione un proveedor primero.');
@@ -754,7 +963,8 @@ document.getElementById('btn_agregar_carrito').addEventListener('click', functio
         producto_id: option.value,
         nombre: option.dataset.nombre,
         cantidad: cantidad,
-        precio: precio
+        precio: precio,
+        iva: selectIva.value
     };
     
     carrito.push(producto);
@@ -764,6 +974,7 @@ document.getElementById('btn_agregar_carrito').addEventListener('click', functio
     selectProducto.selectedIndex = 0;
     inputCantidad.value = 1;
     inputPrecio.value = '';
+    selectIva.selectedIndex = 0;
 });
 
 // Actualizar vista del carrito
@@ -779,32 +990,138 @@ function actualizarCarrito() {
         carritoVacio.style.display = 'block';
         tablaCarrito.style.display = 'none';
         document.getElementById('form_confirmar_compra').style.display = 'none';
+        // Actualizar saldo disponible
+        actualizarSaldoDisponible(0);
         return;
     }
     
     carritoVacio.style.display = 'none';
     tablaCarrito.style.display = 'table';
     
+    // Calcular totales sin IVA primero
+    var total5 = 0;
+    var total10 = 0;
+    var totalExenta = 0;
+    
+    carrito.forEach(function(item) {
+        var subtotal = item.cantidad * item.precio;
+        if (item.iva === 'exenta') {
+            totalExenta += subtotal;
+        } else if (item.iva === '5') {
+            total5 += subtotal;
+        } else {
+            total10 += subtotal;
+        }
+    });
+    
+    // Calcular IVA 5% como total5 / 21
+    var iva5 = Math.round(total5 / 21);
+    // Calcular IVA 10% como total10 / 11
+    var iva10 = Math.round(total10 / 11);
+    var totalConIva = total5 + iva5 + total10 + iva10 + totalExenta;
+    
+    // Mostrar productos en la tabla
     carrito.forEach(function(item, index) {
         var subtotal = item.cantidad * item.precio;
-        totalCarrito += subtotal;
+        var ivaTexto = '';
+        var subtotalMostrar = subtotal;
+        
+        if (item.iva === '5') {
+            ivaTexto = '5%';
+            // Calcular IVA 5% proporcional para este producto
+            if (total5 > 0) {
+                var proporcion = subtotal / total5;
+                var ivaProporcional = Math.round(iva5 * proporcion);
+                subtotalMostrar = subtotal + ivaProporcional;
+            }
+        } else if (item.iva === '10') {
+            ivaTexto = '10%';
+            // Calcular IVA 10% proporcional para este producto
+            if (total10 > 0) {
+                var proporcion = subtotal / total10;
+                var ivaProporcional = Math.round(iva10 * proporcion);
+                subtotalMostrar = subtotal + ivaProporcional;
+            }
+        } else {
+            ivaTexto = 'Exenta';
+        }
         
         var row = document.createElement('tr');
         row.innerHTML = 
             '<td>' + item.nombre + '</td>' +
             '<td>' + item.cantidad + '</td>' +
-            '<td>' + item.precio.toLocaleString('es-PY') + ' Gs</td>' +
-            '<td>' + subtotal.toLocaleString('es-PY') + ' Gs</td>' +
+            '<td>' + number_format(item.precio, 0, ',', '.') + ' Gs</td>' +
+            '<td>' + ivaTexto + '</td>' +
+            '<td>' + number_format(subtotalMostrar, 0, ',', '.') + ' Gs</td>' +
             '<td><button type="button" class="btn-eliminar-item" onclick="eliminarDelCarrito(' + index + ')"><i class="fas fa-trash"></i></button></td>';
         carritoBody.appendChild(row);
     });
     
-    document.getElementById('total_carrito').textContent = totalCarrito.toLocaleString('es-PY') + ' Gs';
+    document.getElementById('total_carrito').textContent = number_format(totalConIva, 0, ',', '.') + ' Gs';
+    
+    // Actualizar saldo disponible
+    actualizarSaldoDisponible(totalConIva);
     
     // Actualizar JSON oculto
     document.getElementById('input_carrito_json').value = JSON.stringify(carrito);
     
     verificarCarrito();
+}
+
+// Actualizar visualización del saldo disponible
+function actualizarSaldoDisponible(totalCompra) {
+    var saldoInfo = document.getElementById('info_saldo_caja');
+    if (!saldoInfo) return;
+    
+    var saldoTexto = document.getElementById('saldo_disponible_texto');
+    var saldoRestante = saldoDisponible - totalCompra;
+    
+    if (saldoTexto) {
+        saldoTexto.textContent = number_format(saldoDisponible, 0, ',', '.') + ' Gs';
+    }
+    
+    if (totalCompra > 0) {
+        saldoInfo.style.display = 'block';
+        if (saldoRestante < 0) {
+            saldoInfo.style.background = '#fee2e2';
+            saldoInfo.style.borderLeftColor = '#dc2626';
+            saldoInfo.style.color = '#991b1b';
+            saldoInfo.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <strong>Saldo insuficiente:</strong> Saldo disponible: ' + number_format(saldoDisponible, 0, ',', '.') + ' Gs. Total compra: ' + number_format(totalCompra, 0, ',', '.') + ' Gs. <strong>Faltan: ' + number_format(Math.abs(saldoRestante), 0, ',', '.') + ' Gs</strong>';
+        } else {
+            saldoInfo.style.background = '#f0fdf4';
+            saldoInfo.style.borderLeftColor = '#10b981';
+            saldoInfo.style.color = '#065f46';
+            saldoInfo.innerHTML = '<i class="fas fa-wallet"></i> <strong>Saldo disponible:</strong> ' + number_format(saldoDisponible, 0, ',', '.') + ' Gs. Total compra: ' + number_format(totalCompra, 0, ',', '.') + ' Gs. <strong>Saldo restante: ' + number_format(saldoRestante, 0, ',', '.') + ' Gs</strong>';
+        }
+    } else {
+        saldoInfo.style.background = '#fff7ed';
+        saldoInfo.style.borderLeftColor = '#f59e0b';
+        saldoInfo.style.color = '#92400e';
+        saldoInfo.innerHTML = '<i class="fas fa-wallet"></i> <strong>Saldo disponible en caja:</strong> <span id="saldo_disponible_texto">' + number_format(saldoDisponible, 0, ',', '.') + ' Gs</span>';
+    }
+}
+
+// Función para formatear números
+function number_format(number, decimals, dec_point, thousands_sep) {
+    number = (number + '').replace(/[^0-9+\-Ee.]/g, '');
+    var n = !isFinite(+number) ? 0 : +number;
+    var prec = !isFinite(+decimals) ? 0 : Math.abs(decimals);
+    var sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep;
+    var dec = (typeof dec_point === 'undefined') ? '.' : dec_point;
+    var s = '';
+    var toFixedFix = function(n, prec) {
+        var k = Math.pow(10, prec);
+        return '' + Math.round(n * k) / k;
+    };
+    s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
+    if (s[0].length > 3) {
+        s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+    }
+    if ((s[1] || '').length < prec) {
+        s[1] = s[1] || '';
+        s[1] += new Array(prec - s[1].length + 1).join('0');
+    }
+    return s.join(dec);
 }
 
 // Eliminar del carrito
@@ -824,6 +1141,20 @@ function verificarCarrito() {
         formConfirmar.style.display = 'none';
     }
 }
+
+// Validar antes de confirmar compra
+document.getElementById('form_compra_final').addEventListener('submit', function(e) {
+    var totalCarrito = 0;
+    carrito.forEach(function(item) {
+        totalCarrito += item.cantidad * item.precio;
+    });
+    
+    if (totalCarrito > saldoDisponible) {
+        e.preventDefault();
+        alert('ERROR: Saldo insuficiente en caja.\n\nSaldo disponible: ' + number_format(saldoDisponible, 0, ',', '.') + ' Gs\nMonto de compra: ' + number_format(totalCarrito, 0, ',', '.') + ' Gs\n\nFaltan: ' + number_format(totalCarrito - saldoDisponible, 0, ',', '.') + ' Gs');
+        return false;
+    }
+});
 
 // Prevenir envío del formulario de agregar
 document.getElementById('form_agregar_producto').addEventListener('submit', function(e) {

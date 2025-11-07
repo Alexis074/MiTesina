@@ -136,12 +136,10 @@ $ganancia_neta = $total_ventas - $total_compras;
                 <label>Fecha Hasta:</label>
                 <input type="date" name="fecha_hasta" value="<?= htmlspecialchars($fecha_hasta) ?>" class="form-input-horizontal" required>
             </div>
-            <div>
-                <button type="submit" class="btn-submit"><i class="fas fa-filter"></i> Filtrar</button>
-            </div>
-            <div>
+            <div style="display: flex; align-items: flex-end;">
+                <button type="submit" class="btn-submit" style="margin-right: 10px;"><i class="fas fa-filter"></i> Filtrar</button>
                 <a href="generar_reporte_pdf.php?fecha_desde=<?= urlencode($fecha_desde) ?>&fecha_hasta=<?= urlencode($fecha_hasta) ?>" 
-                   class="btn-export" target="_blank">
+                   class="btn-export" target="_blank" style="display: inline-flex; align-items: center; height: 42px; padding: 12px 24px;">
                     <i class="fas fa-file-pdf"></i> Generar Reporte PDF
                 </a>
             </div>

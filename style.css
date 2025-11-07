@@ -8,12 +8,14 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 60px;
+    height: auto;
+    min-height: 60px;
     z-index: 1000;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     overflow-x: auto;
     overflow-y: hidden;
+    gap: 4px;
 }
 .navbar::-webkit-scrollbar {
     height: 4px;
@@ -29,12 +31,13 @@
     color: white;
     font-weight: bold;
     font-size: 16px;
-    margin-right: 20px;
+    margin-right: auto;
     display: flex;
     align-items: center;
     gap: 6px;
     white-space: nowrap;
     flex-shrink: 0;
+    padding: 8px 0;
 }
 .navbar .logo i {
     font-size: 14px;
@@ -42,8 +45,7 @@
 .navbar a {
     color: white;
     text-decoration: none;
-    padding: 6px 10px;
-    margin-right: 6px;
+    padding: 8px 12px;
     border-radius: 5px;
     display: flex;
     align-items: center;
@@ -52,6 +54,7 @@
     transition: background 0.3s, transform 0.2s;
     white-space: nowrap;
     flex-shrink: 0;
+    height: fit-content;
 }
 .navbar a i {
     font-size: 13px;
@@ -60,6 +63,9 @@
 .navbar a.active {
     background-color: #2563eb;
     transform: scale(1.03);
+}
+.navbar a[style*="margin-left: auto"] {
+    margin-left: auto;
 }
 
 /* ==================== Espaciado general ==================== */
@@ -290,8 +296,26 @@ table.crud-table tr.factura-anulada td {
 
 /* ==================== Responsive ==================== */
 @media (max-width:768px){
-    .navbar { flex-direction: column; height: auto; padding: 10px; }
-    .navbar a { margin: 5px 0; }
+    .navbar { 
+        flex-direction: column; 
+        height: auto; 
+        padding: 10px; 
+        align-items: stretch;
+    }
+    .navbar .logo { 
+        margin-right: 0; 
+        margin-bottom: 10px;
+        text-align: center;
+        justify-content: center;
+    }
+    .navbar a { 
+        margin: 2px 0; 
+        justify-content: flex-start;
+        width: 100%;
+    }
+    .navbar a[style*="margin-left: auto"] {
+        margin-left: 0;
+    }
     table.crud-table { font-size:12px; }
     .btn { width: 30px; height: 30px; font-size: 14px; }
     form input, form button { font-size:14px; padding:8px; }

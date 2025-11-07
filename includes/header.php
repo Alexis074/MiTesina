@@ -38,6 +38,9 @@ include $base_path . 'includes/auth.php';
     <?php if (tienePermiso('reportes', 'ver')): ?>
     <a href="<?php echo $base_url; ?>modulos/reportes/reportes.php" <?php echo (strpos($current_page, 'reportes') !== false) ? 'class="active"' : ''; ?>><i class="fas fa-chart-bar"></i> Reportes</a>
     <?php endif; ?>
+    <?php if (tienePermiso('ventas', 'ver')): ?>
+    <a href="<?php echo $base_url; ?>modulos/credito/cuotas.php" <?php echo (strpos($current_page, 'credito') !== false || strpos($current_page, 'cuotas') !== false) ? 'class="active"' : ''; ?>><i class="fas fa-credit-card"></i> Crédito</a>
+    <?php endif; ?>
     <?php if (tienePermiso('backup', 'ver')): ?>
     <a href="<?php echo $base_url; ?>modulos/backup/backup.php" <?php echo (strpos($current_page, 'backup') !== false) ? 'class="active"' : ''; ?>><i class="fas fa-database"></i> Backup</a>
     <?php endif; ?>
