@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $numero_cuotas = isset($_POST['numero_cuotas']) ? (int)$_POST['numero_cuotas'] : 0;
     
     // Validar cuotas si es crédito
-    $es_credito = ($condicion_venta == 'Crédito' || ($forma_pago == 'Tarjeta' && isset($_POST['a_credito']) && $_POST['a_credito'] == '1'));
+    $es_credito = ($condicion_venta == 'Crédito');
     if ($es_credito && ($numero_cuotas < 2 || $numero_cuotas > 6)) {
         $mensaje = "Error: El número de cuotas debe estar entre 2 y 6 meses.";
     }
@@ -161,64 +161,147 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $next_timbrado++;
         }
         
-        $timbrado = (string)$next_timbrado;
-        // Generar fechas de vigencia (año completo: 01/01/YYYY al 31/12/YYYY)
-        $anio_actual = date('Y');
-        $inicio_vigencia = $anio_actual . '-01-01'; // Primer día del año
-        $fin_vigencia = $anio_actual . '-12-31'; // Último día del año
-
-        $sql_cab = "INSERT INTO cabecera_factura_ventas
-            (numero_factura, condicion_venta, forma_pago, fecha_hora, cliente_id, monto_total, timbrado, inicio_vigencia, fin_vigencia)
-            VALUES (:numero_factura,:condicion_venta,:forma_pago,:fecha_hora,:cliente_id,:monto_total,:timbrado,:inicio_vigencia,:fin_vigencia)";
-        $stmt_cab = $pdo->prepare($sql_cab);
-        $stmt_cab->execute(array(
-            ':numero_factura'=>$numero_factura,
-            ':condicion_venta'=>$condicion_venta,
-            ':forma_pago'=>$forma_pago,
-            ':fecha_hora'=>$fecha,
-            ':cliente_id'=>$cliente_id,
-            ':monto_total'=>$total_venta,
-            ':timbrado'=>$timbrado,
-            ':inicio_vigencia'=>$inicio_vigencia,
-            ':fin_vigencia'=>$fin_vigencia
-        ));
-        $factura_id = (int)$pdo->lastInsertId();
-
-        $stmt_det = $pdo->prepare("INSERT INTO detalle_factura_ventas
-            (factura_id, producto_id, cantidad, precio_unitario, valor_venta_5, valor_venta_10, valor_venta_exenta, total_parcial)
-            VALUES (:factura_id,:producto_id,:cantidad,:precio_unitario,:valor_venta_5,:valor_venta_10,:valor_venta_exenta,:total_parcial)");
-        $stmt_stock = $pdo->prepare("UPDATE productos SET stock=stock-:cantidad WHERE id=:producto_id");
-
-        foreach($detalle as $item){
-            $stmt_det->execute(array(
-                ':factura_id'=>$factura_id,
-                ':producto_id'=>$item['producto_id'],
-                ':cantidad'=>$item['cantidad'],
-                ':precio_unitario'=>$item['precio_unitario'],
-                ':valor_venta_5'=>$item['valor_venta_5'],
-                ':valor_venta_10'=>$item['valor_venta_10'],
-                ':valor_venta_exenta'=>$item['valor_venta_exenta'],
-                ':total_parcial'=>$item['total_parcial']
-            ));
-            $stmt_stock->execute(array(
-                ':cantidad'=>$item['cantidad'],
-                ':producto_id'=>$item['producto_id']
-            ));
-        }
-
-        // Si es venta a crédito, crear registro de crédito y cuotas
+        // Si es venta a crédito, NO crear factura, solo crear crédito y guardar productos
         if ($es_credito && $numero_cuotas >= 2 && $numero_cuotas <= 6) {
+            // Verificar y crear tablas si no existen (compatible con MySQL 5.6)
             try {
+                $pdo->query("SELECT 1 FROM ventas_credito LIMIT 1");
+            } catch (Exception $e) {
+                // Crear tablas si no existen
+                try {
+                    $stmt = $pdo->query("SHOW TABLES LIKE 'ventas_credito'");
+                    if ($stmt->rowCount() == 0) {
+                        $pdo->exec("CREATE TABLE ventas_credito (
+                            id INT(11) NOT NULL AUTO_INCREMENT,
+                            factura_id INT(11) NULL,
+                            cliente_id INT(11) NOT NULL,
+                            monto_total DECIMAL(15,2) NOT NULL,
+                            numero_cuotas INT(11) NOT NULL,
+                            monto_cuota DECIMAL(15,2) NOT NULL,
+                            fecha_creacion DATETIME NOT NULL,
+                            estado ENUM('Activa','Finalizada','Cancelada') DEFAULT 'Activa',
+                            fecha_finalizacion DATETIME NULL,
+                            PRIMARY KEY (id),
+                            KEY factura_id (factura_id),
+                            KEY cliente_id (cliente_id)
+                        ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+                    }
+                    
+                    $stmt = $pdo->query("SHOW TABLES LIKE 'cuotas_credito'");
+                    if ($stmt->rowCount() == 0) {
+                        $pdo->exec("CREATE TABLE cuotas_credito (
+                            id INT(11) NOT NULL AUTO_INCREMENT,
+                            venta_credito_id INT(11) NOT NULL,
+                            numero_cuota INT(11) NOT NULL,
+                            monto DECIMAL(15,2) NOT NULL,
+                            fecha_vencimiento DATE NOT NULL,
+                            fecha_pago DATETIME NULL,
+                            monto_pagado DECIMAL(15,2) DEFAULT 0,
+                            estado ENUM('Pendiente','Pagada','Vencida') DEFAULT 'Pendiente',
+                            observaciones TEXT NULL,
+                            PRIMARY KEY (id),
+                            KEY venta_credito_id (venta_credito_id)
+                        ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+                    }
+                    
+                    $stmt = $pdo->query("SHOW TABLES LIKE 'recibos_dinero'");
+                    if ($stmt->rowCount() == 0) {
+                        $pdo->exec("CREATE TABLE recibos_dinero (
+                            id INT(11) NOT NULL AUTO_INCREMENT,
+                            numero_recibo VARCHAR(50) NOT NULL,
+                            cliente_id INT(11) NOT NULL,
+                            venta_credito_id INT(11) NULL,
+                            cuota_id INT(11) NULL,
+                            monto DECIMAL(15,2) NOT NULL,
+                            fecha_pago DATETIME NOT NULL,
+                            forma_pago VARCHAR(50) NOT NULL,
+                            concepto VARCHAR(255) NOT NULL,
+                            observaciones TEXT NULL,
+                            usuario_id INT(11) NULL,
+                            PRIMARY KEY (id),
+                            UNIQUE KEY numero_recibo (numero_recibo),
+                            KEY cliente_id (cliente_id),
+                            KEY venta_credito_id (venta_credito_id),
+                            KEY cuota_id (cuota_id)
+                        ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+                    }
+                    
+                    $stmt = $pdo->query("SHOW TABLES LIKE 'pagares'");
+                    if ($stmt->rowCount() == 0) {
+                        $pdo->exec("CREATE TABLE pagares (
+                            id INT(11) NOT NULL AUTO_INCREMENT,
+                            venta_credito_id INT(11) NOT NULL,
+                            numero_pagare VARCHAR(50) NOT NULL,
+                            cliente_id INT(11) NOT NULL,
+                            monto_total DECIMAL(15,2) NOT NULL,
+                            fecha_emision DATE NOT NULL,
+                            fecha_vencimiento DATE NOT NULL,
+                            lugar_pago VARCHAR(255) NOT NULL,
+                            estado ENUM('Vigente','Cancelado') DEFAULT 'Vigente',
+                            observaciones TEXT NULL,
+                            PRIMARY KEY (id),
+                            UNIQUE KEY numero_pagare (numero_pagare),
+                            KEY venta_credito_id (venta_credito_id),
+                            KEY cliente_id (cliente_id)
+                        ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+                    }
+                    
+                    $stmt = $pdo->query("SHOW TABLES LIKE 'detalle_ventas_credito'");
+                    if ($stmt->rowCount() == 0) {
+                        $pdo->exec("CREATE TABLE detalle_ventas_credito (
+                            id INT(11) NOT NULL AUTO_INCREMENT,
+                            venta_credito_id INT(11) NOT NULL,
+                            producto_id INT(11) NOT NULL,
+                            cantidad DECIMAL(10,2) NOT NULL,
+                            precio_unitario DECIMAL(15,2) NOT NULL,
+                            valor_venta_5 DECIMAL(15,2) DEFAULT 0,
+                            valor_venta_10 DECIMAL(15,2) DEFAULT 0,
+                            valor_venta_exenta DECIMAL(15,2) DEFAULT 0,
+                            total_parcial DECIMAL(15,2) NOT NULL,
+                            PRIMARY KEY (id),
+                            KEY venta_credito_id (venta_credito_id),
+                            KEY producto_id (producto_id)
+                        ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+                    }
+                } catch (Exception $e2) {
+                    error_log("Error al crear tablas de crédito: " . $e2->getMessage());
+                }
+            }
+            
+            try {
+                $pdo->beginTransaction();
+                
+                // Descontar stock de productos
+                $stmt_stock = $pdo->prepare("UPDATE productos SET stock=stock-:cantidad WHERE id=:producto_id");
+                foreach($detalle as $item){
+                    $stmt_stock->execute(array(
+                        ':cantidad'=>$item['cantidad'],
+                        ':producto_id'=>$item['producto_id']
+                    ));
+                }
+                
+                // Verificar y modificar la columna factura_id si no permite NULL
+                try {
+                    $stmt_check = $pdo->query("SHOW COLUMNS FROM ventas_credito WHERE Field = 'factura_id'");
+                    $columna = $stmt_check->fetch(PDO::FETCH_ASSOC);
+                    if ($columna && strtoupper($columna['Null']) == 'NO') {
+                        // Modificar la columna para permitir NULL
+                        $pdo->exec("ALTER TABLE ventas_credito MODIFY factura_id INT(11) NULL");
+                    }
+                } catch (Exception $e) {
+                    error_log("Error al verificar/modificar columna factura_id: " . $e->getMessage());
+                }
+                
+                // Insertar venta a crédito (sin factura_id todavía)
                 $monto_cuota = round($total_venta / $numero_cuotas);
                 $monto_ultima_cuota = $total_venta - ($monto_cuota * ($numero_cuotas - 1));
                 
-                // Insertar venta a crédito
+                // Insertar sin incluir factura_id (será NULL por defecto)
                 $sql_credito = "INSERT INTO ventas_credito 
-                               (factura_id, cliente_id, monto_total, numero_cuotas, monto_cuota, fecha_creacion, estado)
-                               VALUES (:factura_id, :cliente_id, :monto_total, :numero_cuotas, :monto_cuota, :fecha_creacion, 'Activa')";
+                               (cliente_id, monto_total, numero_cuotas, monto_cuota, fecha_creacion, estado)
+                               VALUES (:cliente_id, :monto_total, :numero_cuotas, :monto_cuota, :fecha_creacion, 'Activa')";
                 $stmt_credito = $pdo->prepare($sql_credito);
                 $stmt_credito->execute([
-                    'factura_id' => $factura_id,
                     'cliente_id' => $cliente_id,
                     'monto_total' => $total_venta,
                     'numero_cuotas' => $numero_cuotas,
@@ -226,6 +309,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'fecha_creacion' => $fecha
                 ]);
                 $venta_credito_id = $pdo->lastInsertId();
+                
+                // Guardar detalles de productos en detalle_ventas_credito
+                $stmt_det_credito = $pdo->prepare("INSERT INTO detalle_ventas_credito
+                    (venta_credito_id, producto_id, cantidad, precio_unitario, valor_venta_5, valor_venta_10, valor_venta_exenta, total_parcial)
+                    VALUES (:venta_credito_id, :producto_id, :cantidad, :precio_unitario, :valor_venta_5, :valor_venta_10, :valor_venta_exenta, :total_parcial)");
+                
+                foreach($detalle as $item){
+                    $stmt_det_credito->execute(array(
+                        ':venta_credito_id'=>$venta_credito_id,
+                        ':producto_id'=>$item['producto_id'],
+                        ':cantidad'=>$item['cantidad'],
+                        ':precio_unitario'=>$item['precio_unitario'],
+                        ':valor_venta_5'=>$item['valor_venta_5'],
+                        ':valor_venta_10'=>$item['valor_venta_10'],
+                        ':valor_venta_exenta'=>$item['valor_venta_exenta'],
+                        ':total_parcial'=>$item['total_parcial']
+                    ));
+                }
                 
                 // Crear cuotas (30 días entre cada una)
                 $fecha_base = new DateTime($fecha);
@@ -247,24 +348,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ]);
                 }
                 
+                $pdo->commit();
+                
+                // Registrar en auditoría
+                include $base_path . 'includes/auditoria.php';
+                registrarAuditoria('crear', 'credito', 'Venta a crédito creada. Cliente ID: ' . $cliente_id . ', Total: ' . number_format($total_venta,0,',','.') . ', Cuotas: ' . $numero_cuotas);
+                
+                $mensaje = "Venta a crédito registrada. Total: ".number_format($total_venta,0,',','.')." Gs - Crédito a $numero_cuotas cuotas creado. Se generará factura al completar todos los pagos.";
+                
+                // Recargar para limpiar el formulario
+                header("Location: ventas.php?success=1&credito_id=".$venta_credito_id);
+                exit();
+                
             } catch (Exception $e) {
+                $pdo->rollBack();
                 error_log("Error al crear crédito: " . $e->getMessage());
-                // Continuar aunque falle la creación de crédito
+                $mensaje = "Error al crear crédito: " . $e->getMessage();
             }
-        }
+        } else {
+            // Venta de contado - crear factura normalmente
+            $timbrado = (string)$next_timbrado;
+            // Generar fechas de vigencia (año completo: 01/01/YYYY al 31/12/YYYY)
+            $anio_actual = date('Y');
+            $inicio_vigencia = $anio_actual . '-01-01'; // Primer día del año
+            $fin_vigencia = $anio_actual . '-12-31'; // Último día del año
 
-        // Registrar en auditoría
-        include $base_path . 'includes/auditoria.php';
-        registrarAuditoria('crear', 'ventas', 'Factura #' . $numero_factura . ' creada. Cliente ID: ' . $cliente_id . ', Total: ' . number_format($total_venta,0,',','.'));
-        
-        $mensaje = "Venta registrada. Factura: $numero_factura Total: ".number_format($total_venta,0,',','.');
-        if ($es_credito) {
-            $mensaje .= " - Crédito a $numero_cuotas cuotas creado.";
+            $sql_cab = "INSERT INTO cabecera_factura_ventas
+                (numero_factura, condicion_venta, forma_pago, fecha_hora, cliente_id, monto_total, timbrado, inicio_vigencia, fin_vigencia)
+                VALUES (:numero_factura,:condicion_venta,:forma_pago,:fecha_hora,:cliente_id,:monto_total,:timbrado,:inicio_vigencia,:fin_vigencia)";
+            $stmt_cab = $pdo->prepare($sql_cab);
+            $stmt_cab->execute(array(
+                ':numero_factura'=>$numero_factura,
+                ':condicion_venta'=>$condicion_venta,
+                ':forma_pago'=>$forma_pago,
+                ':fecha_hora'=>$fecha,
+                ':cliente_id'=>$cliente_id,
+                ':monto_total'=>$total_venta,
+                ':timbrado'=>$timbrado,
+                ':inicio_vigencia'=>$inicio_vigencia,
+                ':fin_vigencia'=>$fin_vigencia
+            ));
+            $factura_id = (int)$pdo->lastInsertId();
+
+            $stmt_det = $pdo->prepare("INSERT INTO detalle_factura_ventas
+                (factura_id, producto_id, cantidad, precio_unitario, valor_venta_5, valor_venta_10, valor_venta_exenta, total_parcial)
+                VALUES (:factura_id,:producto_id,:cantidad,:precio_unitario,:valor_venta_5,:valor_venta_10,:valor_venta_exenta,:total_parcial)");
+            $stmt_stock = $pdo->prepare("UPDATE productos SET stock=stock-:cantidad WHERE id=:producto_id");
+
+            foreach($detalle as $item){
+                $stmt_det->execute(array(
+                    ':factura_id'=>$factura_id,
+                    ':producto_id'=>$item['producto_id'],
+                    ':cantidad'=>$item['cantidad'],
+                    ':precio_unitario'=>$item['precio_unitario'],
+                    ':valor_venta_5'=>$item['valor_venta_5'],
+                    ':valor_venta_10'=>$item['valor_venta_10'],
+                    ':valor_venta_exenta'=>$item['valor_venta_exenta'],
+                    ':total_parcial'=>$item['total_parcial']
+                ));
+                $stmt_stock->execute(array(
+                    ':cantidad'=>$item['cantidad'],
+                    ':producto_id'=>$item['producto_id']
+                ));
+            }
+
+            // Registrar en caja
+            if ($caja_abierta) {
+                $stmt_movimiento = $pdo->prepare("INSERT INTO caja_movimientos 
+                                                 (caja_id, fecha, tipo, concepto, monto)
+                                                 VALUES (?, NOW(), 'Ingreso', ?, ?)");
+                $concepto_caja = "Venta - Factura #" . $numero_factura . " - Cliente ID: " . $cliente_id;
+                $stmt_movimiento->execute([$caja_abierta['id'], $concepto_caja, $total_venta]);
+            }
+
+            // Registrar en auditoría
+            include $base_path . 'includes/auditoria.php';
+            registrarAuditoria('crear', 'ventas', 'Factura #' . $numero_factura . ' creada. Cliente ID: ' . $cliente_id . ', Total: ' . number_format($total_venta,0,',','.'));
+            
+            $mensaje = "Venta registrada. Factura: $numero_factura Total: ".number_format($total_venta,0,',','.');
+            
+            // Recargar para mostrar la nueva venta
+            header("Location: ventas.php?success=1&factura_id=".$factura_id);
+            exit();
         }
-        
-        // Recargar para mostrar la nueva venta
-        header("Location: ventas.php?success=1&factura_id=".$factura_id);
-        exit();
     }
 }
 
@@ -410,14 +576,7 @@ if (isset($_GET['success']) && isset($_GET['factura_id'])) {
                     </select>
                 </div>
                 
-                <!-- Campos para crédito -->
-                <div id="campo_a_credito" class="form-group-horizontal" style="display:none;">
-                    <label>
-                        <input type="checkbox" name="a_credito" id="checkbox_a_credito" value="1" style="margin-right: 5px;">
-                        A Crédito
-                    </label>
-                </div>
-                
+                <!-- Campo para número de cuotas (solo visible cuando es crédito) -->
                 <div id="campo_cuotas" class="form-group-horizontal" style="display:none;">
                     <label>Número de Cuotas:</label>
                     <select name="numero_cuotas" id="select_cuotas" class="form-select-horizontal">
@@ -912,37 +1071,29 @@ document.getElementById('form_agregar_producto').addEventListener('submit', func
 // Mostrar/ocultar campos de crédito
 function actualizarCamposCredito() {
     var condicion = document.getElementById('select_condicion').value;
-    var formaPago = document.getElementById('select_forma_pago').value;
-    var campoCredito = document.getElementById('campo_a_credito');
     var campoCuotas = document.getElementById('campo_cuotas');
-    var checkboxCredito = document.getElementById('checkbox_a_credito');
     
-    if (condicion === 'Crédito' || (formaPago === 'Tarjeta')) {
-        if (formaPago === 'Tarjeta') {
-            campoCredito.style.display = 'flex';
-        } else {
-            campoCredito.style.display = 'none';
-            checkboxCredito.checked = false;
-        }
-        
-        if (condicion === 'Crédito' || checkboxCredito.checked) {
-            campoCuotas.style.display = 'flex';
-            if (!checkboxCredito.checked && condicion === 'Crédito') {
-                checkboxCredito.checked = true;
-            }
-        } else {
-            campoCuotas.style.display = 'none';
-        }
+    // Solo mostrar cuotas si la condición es "Crédito"
+    if (condicion === 'Crédito') {
+        campoCuotas.style.display = 'flex';
     } else {
-        campoCredito.style.display = 'none';
         campoCuotas.style.display = 'none';
-        checkboxCredito.checked = false;
     }
+    
+    // Asegurar alineación correcta
+    setTimeout(function() {
+        var formGroups = document.querySelectorAll('.form-group-horizontal');
+        formGroups.forEach(function(group) {
+            if (group.style.display !== 'none') {
+                group.style.display = 'flex';
+                group.style.flexDirection = 'column';
+                group.style.justifyContent = 'flex-end';
+            }
+        });
+    }, 10);
 }
 
 document.getElementById('select_condicion').addEventListener('change', actualizarCamposCredito);
-document.getElementById('select_forma_pago').addEventListener('change', actualizarCamposCredito);
-document.getElementById('checkbox_a_credito').addEventListener('change', actualizarCamposCredito);
 
 // Validar caja antes de confirmar venta
 var cajaAbierta = <?php echo $caja_abierta ? 'true' : 'false'; ?>;
@@ -956,8 +1107,7 @@ document.getElementById('form_venta_final').addEventListener('submit', function(
     
     // Validar cuotas si es crédito
     var condicion = document.getElementById('select_condicion').value;
-    var checkboxCredito = document.getElementById('checkbox_a_credito');
-    var esCredito = (condicion === 'Crédito' || checkboxCredito.checked);
+    var esCredito = (condicion === 'Crédito');
     
     if (esCredito) {
         var numeroCuotas = parseInt(document.getElementById('select_cuotas').value);

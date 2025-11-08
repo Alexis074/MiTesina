@@ -10,48 +10,199 @@ include $base_path . 'includes/header.php';
 
 $mensaje = "";
 
-// Actualizar estado de cuotas vencidas
+// Crear tablas si no existen (compatible con MySQL 5.6)
+function crearTablasCredito($pdo) {
+    try {
+        // Verificar y crear tabla ventas_credito
+        $stmt = $pdo->query("SHOW TABLES LIKE 'ventas_credito'");
+        if ($stmt->rowCount() == 0) {
+            $pdo->exec("CREATE TABLE ventas_credito (
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                factura_id INT(11) NULL,
+                cliente_id INT(11) NOT NULL,
+                monto_total DECIMAL(15,2) NOT NULL,
+                numero_cuotas INT(11) NOT NULL,
+                monto_cuota DECIMAL(15,2) NOT NULL,
+                fecha_creacion DATETIME NOT NULL,
+                estado ENUM('Activa','Finalizada','Cancelada') DEFAULT 'Activa',
+                fecha_finalizacion DATETIME NULL,
+                PRIMARY KEY (id),
+                KEY factura_id (factura_id),
+                KEY cliente_id (cliente_id)
+            ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+        } else {
+            // Verificar y modificar la columna factura_id si no permite NULL
+            try {
+                $stmt_check = $pdo->query("SHOW COLUMNS FROM ventas_credito WHERE Field = 'factura_id'");
+                $columna = $stmt_check->fetch(PDO::FETCH_ASSOC);
+                if ($columna && strtoupper($columna['Null']) == 'NO') {
+                    // Modificar la columna para permitir NULL
+                    $pdo->exec("ALTER TABLE ventas_credito MODIFY factura_id INT(11) NULL");
+                }
+            } catch (Exception $e) {
+                error_log("Error al verificar/modificar columna factura_id: " . $e->getMessage());
+            }
+        }
+        
+        // Verificar y crear tabla cuotas_credito
+        $stmt = $pdo->query("SHOW TABLES LIKE 'cuotas_credito'");
+        if ($stmt->rowCount() == 0) {
+            $pdo->exec("CREATE TABLE cuotas_credito (
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                venta_credito_id INT(11) NOT NULL,
+                numero_cuota INT(11) NOT NULL,
+                monto DECIMAL(15,2) NOT NULL,
+                fecha_vencimiento DATE NOT NULL,
+                fecha_pago DATETIME NULL,
+                monto_pagado DECIMAL(15,2) DEFAULT 0,
+                estado ENUM('Pendiente','Pagada','Vencida') DEFAULT 'Pendiente',
+                observaciones TEXT NULL,
+                PRIMARY KEY (id),
+                KEY venta_credito_id (venta_credito_id)
+            ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+        }
+        
+        // Verificar y crear tabla recibos_dinero
+        $stmt = $pdo->query("SHOW TABLES LIKE 'recibos_dinero'");
+        if ($stmt->rowCount() == 0) {
+            $pdo->exec("CREATE TABLE recibos_dinero (
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                numero_recibo VARCHAR(50) NOT NULL,
+                cliente_id INT(11) NOT NULL,
+                venta_credito_id INT(11) NULL,
+                cuota_id INT(11) NULL,
+                monto DECIMAL(15,2) NOT NULL,
+                fecha_pago DATETIME NOT NULL,
+                forma_pago VARCHAR(50) NOT NULL,
+                concepto VARCHAR(255) NOT NULL,
+                observaciones TEXT NULL,
+                usuario_id INT(11) NULL,
+                PRIMARY KEY (id),
+                UNIQUE KEY numero_recibo (numero_recibo),
+                KEY cliente_id (cliente_id),
+                KEY venta_credito_id (venta_credito_id),
+                KEY cuota_id (cuota_id)
+            ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+        }
+        
+        // Verificar y crear tabla pagares
+        $stmt = $pdo->query("SHOW TABLES LIKE 'pagares'");
+        if ($stmt->rowCount() == 0) {
+            $pdo->exec("CREATE TABLE pagares (
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                venta_credito_id INT(11) NOT NULL,
+                numero_pagare VARCHAR(50) NOT NULL,
+                cliente_id INT(11) NOT NULL,
+                monto_total DECIMAL(15,2) NOT NULL,
+                fecha_emision DATE NOT NULL,
+                fecha_vencimiento DATE NOT NULL,
+                lugar_pago VARCHAR(255) NOT NULL,
+                estado ENUM('Vigente','Cancelado') DEFAULT 'Vigente',
+                observaciones TEXT NULL,
+                PRIMARY KEY (id),
+                UNIQUE KEY numero_pagare (numero_pagare),
+                KEY venta_credito_id (venta_credito_id),
+                KEY cliente_id (cliente_id)
+            ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+        }
+        
+        // Verificar y crear tabla detalle_ventas_credito (para guardar productos sin factura)
+        $stmt = $pdo->query("SHOW TABLES LIKE 'detalle_ventas_credito'");
+        if ($stmt->rowCount() == 0) {
+            $pdo->exec("CREATE TABLE detalle_ventas_credito (
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                venta_credito_id INT(11) NOT NULL,
+                producto_id INT(11) NOT NULL,
+                cantidad DECIMAL(10,2) NOT NULL,
+                precio_unitario DECIMAL(15,2) NOT NULL,
+                valor_venta_5 DECIMAL(15,2) DEFAULT 0,
+                valor_venta_10 DECIMAL(15,2) DEFAULT 0,
+                valor_venta_exenta DECIMAL(15,2) DEFAULT 0,
+                total_parcial DECIMAL(15,2) NOT NULL,
+                PRIMARY KEY (id),
+                KEY venta_credito_id (venta_credito_id),
+                KEY producto_id (producto_id)
+            ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+        }
+        
+        return true;
+    } catch (Exception $e) {
+        error_log("Error al crear tablas de crédito: " . $e->getMessage());
+        return false;
+    }
+}
+
+// Verificar si las tablas existen, si no, crearlas
+$tablas_existen = true;
 try {
-    $pdo->exec("UPDATE cuotas_credito SET estado='Vencida' WHERE estado='Pendiente' AND fecha_vencimiento < CURDATE()");
+    $pdo->query("SELECT 1 FROM ventas_credito LIMIT 1");
+    $pdo->query("SELECT 1 FROM cuotas_credito LIMIT 1");
 } catch (Exception $e) {
-    // Tabla no existe aún
+    // Intentar crear las tablas
+    if (crearTablasCredito($pdo)) {
+        $tablas_existen = true;
+        $mensaje = "Tablas de crédito creadas correctamente.";
+    } else {
+        $tablas_existen = false;
+        $mensaje = "Error: No se pudieron crear las tablas de crédito. Por favor, contacte al administrador.";
+    }
+}
+
+// Actualizar estado de cuotas vencidas
+if ($tablas_existen) {
+    try {
+        $pdo->exec("UPDATE cuotas_credito SET estado='Vencida' WHERE estado='Pendiente' AND fecha_vencimiento < CURDATE()");
+    } catch (Exception $e) {
+        // Ignorar error si no se puede actualizar
+    }
 }
 
 // Obtener cuotas pendientes y vencidas
 $cuotas_pendientes = [];
 $cuotas_vencidas = [];
 $cuotas_proximas = [];
+$todas_cuotas = [];
 
-try {
-    // Todas las cuotas pendientes y vencidas
-    $stmt_vencidas = $pdo->query("SELECT c.*, vc.factura_id, vc.cliente_id, vc.monto_total, vc.numero_cuotas,
-                                  cl.nombre, cl.apellido, cl.telefono, cl.email,
-                                  fv.numero_factura
-                                  FROM cuotas_credito c
-                                  JOIN ventas_credito vc ON c.venta_credito_id = vc.id
-                                  JOIN clientes cl ON vc.cliente_id = cl.id
-                                  JOIN cabecera_factura_ventas fv ON vc.factura_id = fv.id
-                                  WHERE c.estado IN ('Pendiente', 'Vencida')
-                                  ORDER BY c.fecha_vencimiento ASC");
-    $todas_cuotas = $stmt_vencidas->fetchAll();
-    
-    $hoy = new DateTime();
-    $proxima_semana = clone $hoy;
-    $proxima_semana->modify('+7 days');
-    
-    foreach ($todas_cuotas as $cuota) {
-        $fecha_vencimiento = new DateTime($cuota['fecha_vencimiento']);
+if ($tablas_existen) {
+    try {
+        // Todas las cuotas que no están completamente pagadas
+        // LEFT JOIN porque factura_id puede ser NULL hasta que se complete el pago
+        $stmt_vencidas = $pdo->query("SELECT c.*, vc.factura_id, vc.cliente_id, vc.monto_total, vc.numero_cuotas,
+                                      cl.nombre, cl.apellido, cl.telefono, cl.email,
+                                      COALESCE(fv.numero_factura, CONCAT('CREDITO-', vc.id)) as numero_factura
+                                      FROM cuotas_credito c
+                                      JOIN ventas_credito vc ON c.venta_credito_id = vc.id
+                                      JOIN clientes cl ON vc.cliente_id = cl.id
+                                      LEFT JOIN cabecera_factura_ventas fv ON vc.factura_id = fv.id
+                                      WHERE vc.estado = 'Activa' 
+                                      AND (c.estado IN ('Pendiente', 'Vencida') OR (c.monto_pagado < c.monto))
+                                      ORDER BY c.fecha_vencimiento ASC");
+        $todas_cuotas = $stmt_vencidas->fetchAll();
         
-        if ($cuota['estado'] == 'Vencida' || $fecha_vencimiento < $hoy) {
-            $cuotas_vencidas[] = $cuota;
-        } elseif ($fecha_vencimiento <= $proxima_semana) {
-            $cuotas_proximas[] = $cuota;
-        } else {
-            $cuotas_pendientes[] = $cuota;
+        $hoy = new DateTime();
+        $hoy->setTime(0, 0, 0);
+        $proxima_semana = clone $hoy;
+        $proxima_semana->modify('+7 days');
+        
+        foreach ($todas_cuotas as $cuota) {
+            $fecha_vencimiento = new DateTime($cuota['fecha_vencimiento']);
+            $fecha_vencimiento->setTime(0, 0, 0);
+            $monto_restante = (float)$cuota['monto'] - (float)$cuota['monto_pagado'];
+            
+            // Solo incluir si tiene monto pendiente
+            if ($monto_restante > 0) {
+                if ($cuota['estado'] == 'Vencida' || $fecha_vencimiento < $hoy) {
+                    $cuotas_vencidas[] = $cuota;
+                } elseif ($fecha_vencimiento <= $proxima_semana) {
+                    $cuotas_proximas[] = $cuota;
+                } else {
+                    $cuotas_pendientes[] = $cuota;
+                }
+            }
         }
+    } catch (Exception $e) {
+        $mensaje = "Error al cargar cuotas: " . $e->getMessage();
     }
-} catch (Exception $e) {
-    $mensaje = "Error al cargar cuotas: " . $e->getMessage();
 }
 
 // Obtener totales
@@ -139,7 +290,13 @@ foreach ($cuotas_proximas as $c) {
                     </tr>
                 </thead>
                 <tbody>
-                <?php if(empty($todas_cuotas)): ?>
+                <?php if(!$tablas_existen): ?>
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #dc2626;">
+                            <i class="fas fa-exclamation-triangle"></i> Las tablas de crédito no existen. Por favor, contacte al administrador.
+                        </td>
+                    </tr>
+                <?php elseif(empty($cuotas_vencidas) && empty($cuotas_proximas) && empty($cuotas_pendientes)): ?>
                     <tr>
                         <td colspan="7" style="text-align: center; padding: 40px;">
                             No hay cuotas pendientes.

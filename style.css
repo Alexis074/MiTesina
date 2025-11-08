@@ -325,7 +325,7 @@ table.crud-table tr.factura-anulada td {
 /* Botón de enviar en formulario para agregar nuevo cliente por ejemplo */
 .btn-submit {
     width: auto; /* No fijo, se adapta al texto */
-    padding: 12px 40px;
+    padding: 12px 24px;
     background-color: #2563eb;
     color: white;
     font-weight: bold;
@@ -335,12 +335,18 @@ table.crud-table tr.factura-anulada td {
     cursor: pointer;
     transition: background 0.3s, transform 0.2s;
     text-decoration: none;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 42px;
+    min-width: 120px;
+    box-sizing: border-box;
 }
 
 .btn-submit:hover {
     background-color: #1e40af;
-    transform: scale(1.05);
+    transform: scale(1.02);
     color: white;
 }
 
@@ -350,8 +356,8 @@ table.crud-table tr.factura-anulada td {
 }
 
 .btn-cancelar {
-    padding: 12px 40px;
-    background-color: #ef4444;
+    padding: 12px 24px;
+    background-color: #6b7280;
     color: white;
     font-weight: bold;
     font-size: 16px;
@@ -359,19 +365,36 @@ table.crud-table tr.factura-anulada td {
     border: none;
     cursor: pointer;
     text-decoration: none;
-    margin-left: 10px; /* separa de botón principal */
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 42px;
+    min-width: 120px;
+    box-sizing: border-box;
     transition: background 0.3s, transform 0.2s;
 }
 
 .btn-cancelar:hover {
-    background-color: #dc2626;
-    transform: scale(1.05);
+    background-color: #4b5563;
+    transform: scale(1.02);
 }
 
 .form-actions-right {
     display: flex;
     justify-content: flex-end; /* Empuja el botón a la derecha */
+    margin-top: 20px;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Contenedor para botones alineados */
+.button-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
     margin-top: 20px;
 }
 /* ==================== Estilos para eliminar cliente ==================== */

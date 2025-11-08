@@ -110,24 +110,108 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $cuota) {
             $cuotas_restantes = $stmt_cuotas_restantes->fetch();
             
             if ($cuotas_restantes['pendientes'] == 0) {
-                // Todas las cuotas pagadas, finalizar crédito
-                $stmt_finalizar = $pdo->prepare("UPDATE ventas_credito 
-                                                SET estado = 'Finalizada', fecha_finalizacion = NOW()
-                                                WHERE id = ?");
-                $stmt_finalizar->execute([$cuota['venta_credito_id']]);
-                
-                // Generar factura final y pagaré
+                // Todas las cuotas pagadas, generar factura final y pagaré
                 try {
                     // Obtener información de la venta a crédito
-                    $stmt_venta = $pdo->prepare("SELECT vc.*, fv.numero_factura, cl.nombre, cl.apellido, cl.ruc, cl.direccion
+                    $stmt_venta = $pdo->prepare("SELECT vc.*, cl.nombre, cl.apellido, cl.ruc, cl.direccion
                                                  FROM ventas_credito vc
-                                                 JOIN cabecera_factura_ventas fv ON vc.factura_id = fv.id
                                                  JOIN clientes cl ON vc.cliente_id = cl.id
                                                  WHERE vc.id = ?");
                     $stmt_venta->execute([$cuota['venta_credito_id']]);
                     $venta_final = $stmt_venta->fetch();
                     
                     if ($venta_final) {
+                        // Generar número de factura único
+                        $serie_1 = 1;
+                        $serie_2 = 1;
+                        $stmt_num = $pdo->query("SELECT MAX(id) as max_id FROM cabecera_factura_ventas");
+                        $row = $stmt_num->fetch(PDO::FETCH_ASSOC);
+                        $next_id = ($row && $row['max_id']) ? ((int)$row['max_id'] + 1) : 1;
+                        $numero_factura = sprintf('%03d-%03d-%06d', $serie_1, $serie_2, $next_id);
+                        
+                        $stmt_verificar = $pdo->prepare("SELECT id FROM cabecera_factura_ventas WHERE numero_factura = ?");
+                        $stmt_verificar->execute(array($numero_factura));
+                        if ($stmt_verificar->fetch()) {
+                            $next_id++;
+                            $numero_factura = sprintf('%03d-%03d-%06d', $serie_1, $serie_2, $next_id);
+                        }
+                        
+                        // Generar timbrado único
+                        $timbrado_base = 4571575;
+                        $stmt_timbrado = $pdo->query("SELECT timbrado FROM cabecera_factura_ventas WHERE timbrado IS NOT NULL");
+                        $timbrados = $stmt_timbrado->fetchAll(PDO::FETCH_COLUMN);
+                        
+                        $max_timbrado = $timbrado_base - 1;
+                        foreach ($timbrados as $t) {
+                            if (is_numeric($t)) {
+                                $t_num = (int)$t;
+                                if ($t_num > $max_timbrado) {
+                                    $max_timbrado = $t_num;
+                                }
+                            }
+                        }
+                        
+                        if ($max_timbrado >= $timbrado_base) {
+                            $next_timbrado = $max_timbrado + 1;
+                        } else {
+                            $next_timbrado = $timbrado_base;
+                        }
+                        
+                        $stmt_verificar_timbrado = $pdo->prepare("SELECT id FROM cabecera_factura_ventas WHERE timbrado = ?");
+                        $stmt_verificar_timbrado->execute(array($next_timbrado));
+                        if ($stmt_verificar_timbrado->fetch()) {
+                            $next_timbrado++;
+                        }
+                        
+                        $timbrado = (string)$next_timbrado;
+                        $anio_actual = date('Y');
+                        $inicio_vigencia = $anio_actual . '-01-01';
+                        $fin_vigencia = $anio_actual . '-12-31';
+                        
+                        // Crear factura
+                        $sql_cab = "INSERT INTO cabecera_factura_ventas
+                            (numero_factura, condicion_venta, forma_pago, fecha_hora, cliente_id, monto_total, timbrado, inicio_vigencia, fin_vigencia)
+                            VALUES (:numero_factura, 'Crédito', 'Efectivo', NOW(), :cliente_id, :monto_total, :timbrado, :inicio_vigencia, :fin_vigencia)";
+                        $stmt_cab = $pdo->prepare($sql_cab);
+                        $stmt_cab->execute(array(
+                            ':numero_factura' => $numero_factura,
+                            ':cliente_id' => $venta_final['cliente_id'],
+                            ':monto_total' => $venta_final['monto_total'],
+                            ':timbrado' => $timbrado,
+                            ':inicio_vigencia' => $inicio_vigencia,
+                            ':fin_vigencia' => $fin_vigencia
+                        ));
+                        $factura_id = (int)$pdo->lastInsertId();
+                        
+                        // Obtener detalles de productos desde detalle_ventas_credito
+                        $stmt_det_credito = $pdo->prepare("SELECT * FROM detalle_ventas_credito WHERE venta_credito_id = ?");
+                        $stmt_det_credito->execute([$cuota['venta_credito_id']]);
+                        $detalles = $stmt_det_credito->fetchAll();
+                        
+                        // Insertar detalles en detalle_factura_ventas
+                        $stmt_det = $pdo->prepare("INSERT INTO detalle_factura_ventas
+                            (factura_id, producto_id, cantidad, precio_unitario, valor_venta_5, valor_venta_10, valor_venta_exenta, total_parcial)
+                            VALUES (:factura_id, :producto_id, :cantidad, :precio_unitario, :valor_venta_5, :valor_venta_10, :valor_venta_exenta, :total_parcial)");
+                        
+                        foreach ($detalles as $det) {
+                            $stmt_det->execute(array(
+                                ':factura_id' => $factura_id,
+                                ':producto_id' => $det['producto_id'],
+                                ':cantidad' => $det['cantidad'],
+                                ':precio_unitario' => $det['precio_unitario'],
+                                ':valor_venta_5' => $det['valor_venta_5'],
+                                ':valor_venta_10' => $det['valor_venta_10'],
+                                ':valor_venta_exenta' => $det['valor_venta_exenta'],
+                                ':total_parcial' => $det['total_parcial']
+                            ));
+                        }
+                        
+                        // Actualizar ventas_credito con factura_id
+                        $stmt_update = $pdo->prepare("UPDATE ventas_credito 
+                                                     SET factura_id = ?, estado = 'Finalizada', fecha_finalizacion = NOW()
+                                                     WHERE id = ?");
+                        $stmt_update->execute([$factura_id, $cuota['venta_credito_id']]);
+                        
                         // Generar número de pagaré único
                         $numero_pagare = 'PAG-' . date('Y') . '-' . str_pad($venta_final['id'], 6, '0', STR_PAD_LEFT);
                         
@@ -154,8 +238,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $cuota) {
                         ]);
                     }
                 } catch (Exception $e) {
-                    error_log("Error al generar pagaré: " . $e->getMessage());
-                    // Continuar aunque falle la generación del pagaré
+                    error_log("Error al generar factura y pagaré: " . $e->getMessage());
+                    // Continuar aunque falle la generación
                 }
             }
             
@@ -269,7 +353,7 @@ if ($cuota) {
                 <textarea name="observaciones" class="form-input-horizontal" rows="3" placeholder="Opcional"></textarea>
             </div>
 
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <button type="submit" class="btn-submit">
                     <i class="fas fa-check"></i> Registrar Pago
                 </button>
