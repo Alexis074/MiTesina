@@ -164,112 +164,139 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Si es venta a crédito, NO crear factura, solo crear crédito y guardar productos
         if ($es_credito && $numero_cuotas >= 2 && $numero_cuotas <= 6) {
             // Verificar y crear tablas si no existen (compatible con MySQL 5.6)
+            // Verificar cada tabla individualmente
             try {
-                $pdo->query("SELECT 1 FROM ventas_credito LIMIT 1");
+                // Verificar y crear ventas_credito
+                $stmt = $pdo->query("SHOW TABLES LIKE 'ventas_credito'");
+                if ($stmt->rowCount() == 0) {
+                    $pdo->exec("CREATE TABLE ventas_credito (
+                        id INT(11) NOT NULL AUTO_INCREMENT,
+                        factura_id INT(11) NULL,
+                        cliente_id INT(11) NOT NULL,
+                        monto_total DECIMAL(15,2) NOT NULL,
+                        numero_cuotas INT(11) NOT NULL,
+                        monto_cuota DECIMAL(15,2) NOT NULL,
+                        fecha_creacion DATETIME NOT NULL,
+                        estado ENUM('Activa','Finalizada','Cancelada') DEFAULT 'Activa',
+                        fecha_finalizacion DATETIME NULL,
+                        PRIMARY KEY (id),
+                        KEY factura_id (factura_id),
+                        KEY cliente_id (cliente_id)
+                    ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+                } else {
+                    // Verificar y modificar la columna factura_id si no permite NULL
+                    try {
+                        $stmt_check = $pdo->query("SHOW COLUMNS FROM ventas_credito WHERE Field = 'factura_id'");
+                        $columna = $stmt_check->fetch(PDO::FETCH_ASSOC);
+                        if ($columna && strtoupper($columna['Null']) == 'NO') {
+                            $pdo->exec("ALTER TABLE ventas_credito MODIFY factura_id INT(11) NULL");
+                        }
+                    } catch (Exception $e) {
+                        error_log("Error al verificar/modificar columna factura_id: " . $e->getMessage());
+                    }
+                }
+                
+                // Verificar y crear cuotas_credito
+                $stmt = $pdo->query("SHOW TABLES LIKE 'cuotas_credito'");
+                if ($stmt->rowCount() == 0) {
+                    $pdo->exec("CREATE TABLE cuotas_credito (
+                        id INT(11) NOT NULL AUTO_INCREMENT,
+                        venta_credito_id INT(11) NOT NULL,
+                        numero_cuota INT(11) NOT NULL,
+                        monto DECIMAL(15,2) NOT NULL,
+                        fecha_vencimiento DATE NOT NULL,
+                        fecha_pago DATETIME NULL,
+                        monto_pagado DECIMAL(15,2) DEFAULT 0,
+                        estado ENUM('Pendiente','Pagada','Vencida') DEFAULT 'Pendiente',
+                        observaciones TEXT NULL,
+                        PRIMARY KEY (id),
+                        KEY venta_credito_id (venta_credito_id)
+                    ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+                }
+                
+                // Verificar y crear recibos_dinero
+                $stmt = $pdo->query("SHOW TABLES LIKE 'recibos_dinero'");
+                if ($stmt->rowCount() == 0) {
+                    $pdo->exec("CREATE TABLE recibos_dinero (
+                        id INT(11) NOT NULL AUTO_INCREMENT,
+                        numero_recibo VARCHAR(50) NOT NULL,
+                        cliente_id INT(11) NOT NULL,
+                        venta_credito_id INT(11) NULL,
+                        cuota_id INT(11) NULL,
+                        monto DECIMAL(15,2) NOT NULL,
+                        fecha_pago DATETIME NOT NULL,
+                        forma_pago VARCHAR(50) NOT NULL,
+                        concepto VARCHAR(255) NOT NULL,
+                        observaciones TEXT NULL,
+                        usuario_id INT(11) NULL,
+                        PRIMARY KEY (id),
+                        UNIQUE KEY numero_recibo (numero_recibo),
+                        KEY cliente_id (cliente_id),
+                        KEY venta_credito_id (venta_credito_id),
+                        KEY cuota_id (cuota_id)
+                    ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+                }
+                
+                // Verificar y crear pagares
+                $stmt = $pdo->query("SHOW TABLES LIKE 'pagares'");
+                if ($stmt->rowCount() == 0) {
+                    $pdo->exec("CREATE TABLE pagares (
+                        id INT(11) NOT NULL AUTO_INCREMENT,
+                        venta_credito_id INT(11) NOT NULL,
+                        numero_pagare VARCHAR(50) NOT NULL,
+                        cliente_id INT(11) NOT NULL,
+                        monto_total DECIMAL(15,2) NOT NULL,
+                        fecha_emision DATE NOT NULL,
+                        fecha_vencimiento DATE NOT NULL,
+                        lugar_pago VARCHAR(255) NOT NULL,
+                        estado ENUM('Vigente','Cancelado') DEFAULT 'Vigente',
+                        observaciones TEXT NULL,
+                        PRIMARY KEY (id),
+                        UNIQUE KEY numero_pagare (numero_pagare),
+                        KEY venta_credito_id (venta_credito_id),
+                        KEY cliente_id (cliente_id)
+                    ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+                }
+                
+                // Verificar y crear detalle_ventas_credito
+                $stmt = $pdo->query("SHOW TABLES LIKE 'detalle_ventas_credito'");
+                if ($stmt->rowCount() == 0) {
+                    $pdo->exec("CREATE TABLE detalle_ventas_credito (
+                        id INT(11) NOT NULL AUTO_INCREMENT,
+                        venta_credito_id INT(11) NOT NULL,
+                        producto_id INT(11) NOT NULL,
+                        cantidad DECIMAL(10,2) NOT NULL,
+                        precio_unitario DECIMAL(15,2) NOT NULL,
+                        valor_venta_5 DECIMAL(15,2) DEFAULT 0,
+                        valor_venta_10 DECIMAL(15,2) DEFAULT 0,
+                        valor_venta_exenta DECIMAL(15,2) DEFAULT 0,
+                        total_parcial DECIMAL(15,2) NOT NULL,
+                        PRIMARY KEY (id),
+                        KEY venta_credito_id (venta_credito_id),
+                        KEY producto_id (producto_id)
+                    ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+                }
             } catch (Exception $e) {
-                // Crear tablas si no existen
+                error_log("Error al crear/verificar tablas de crédito: " . $e->getMessage());
+                $mensaje = "Error al verificar tablas de crédito: " . $e->getMessage();
+            }
+            
+            // Verificar que las tablas necesarias existan antes de continuar
+            if (empty($mensaje)) {
                 try {
-                    $stmt = $pdo->query("SHOW TABLES LIKE 'ventas_credito'");
-                    if ($stmt->rowCount() == 0) {
-                        $pdo->exec("CREATE TABLE ventas_credito (
-                            id INT(11) NOT NULL AUTO_INCREMENT,
-                            factura_id INT(11) NULL,
-                            cliente_id INT(11) NOT NULL,
-                            monto_total DECIMAL(15,2) NOT NULL,
-                            numero_cuotas INT(11) NOT NULL,
-                            monto_cuota DECIMAL(15,2) NOT NULL,
-                            fecha_creacion DATETIME NOT NULL,
-                            estado ENUM('Activa','Finalizada','Cancelada') DEFAULT 'Activa',
-                            fecha_finalizacion DATETIME NULL,
-                            PRIMARY KEY (id),
-                            KEY factura_id (factura_id),
-                            KEY cliente_id (cliente_id)
-                        ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
-                    }
-                    
-                    $stmt = $pdo->query("SHOW TABLES LIKE 'cuotas_credito'");
-                    if ($stmt->rowCount() == 0) {
-                        $pdo->exec("CREATE TABLE cuotas_credito (
-                            id INT(11) NOT NULL AUTO_INCREMENT,
-                            venta_credito_id INT(11) NOT NULL,
-                            numero_cuota INT(11) NOT NULL,
-                            monto DECIMAL(15,2) NOT NULL,
-                            fecha_vencimiento DATE NOT NULL,
-                            fecha_pago DATETIME NULL,
-                            monto_pagado DECIMAL(15,2) DEFAULT 0,
-                            estado ENUM('Pendiente','Pagada','Vencida') DEFAULT 'Pendiente',
-                            observaciones TEXT NULL,
-                            PRIMARY KEY (id),
-                            KEY venta_credito_id (venta_credito_id)
-                        ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
-                    }
-                    
-                    $stmt = $pdo->query("SHOW TABLES LIKE 'recibos_dinero'");
-                    if ($stmt->rowCount() == 0) {
-                        $pdo->exec("CREATE TABLE recibos_dinero (
-                            id INT(11) NOT NULL AUTO_INCREMENT,
-                            numero_recibo VARCHAR(50) NOT NULL,
-                            cliente_id INT(11) NOT NULL,
-                            venta_credito_id INT(11) NULL,
-                            cuota_id INT(11) NULL,
-                            monto DECIMAL(15,2) NOT NULL,
-                            fecha_pago DATETIME NOT NULL,
-                            forma_pago VARCHAR(50) NOT NULL,
-                            concepto VARCHAR(255) NOT NULL,
-                            observaciones TEXT NULL,
-                            usuario_id INT(11) NULL,
-                            PRIMARY KEY (id),
-                            UNIQUE KEY numero_recibo (numero_recibo),
-                            KEY cliente_id (cliente_id),
-                            KEY venta_credito_id (venta_credito_id),
-                            KEY cuota_id (cuota_id)
-                        ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
-                    }
-                    
-                    $stmt = $pdo->query("SHOW TABLES LIKE 'pagares'");
-                    if ($stmt->rowCount() == 0) {
-                        $pdo->exec("CREATE TABLE pagares (
-                            id INT(11) NOT NULL AUTO_INCREMENT,
-                            venta_credito_id INT(11) NOT NULL,
-                            numero_pagare VARCHAR(50) NOT NULL,
-                            cliente_id INT(11) NOT NULL,
-                            monto_total DECIMAL(15,2) NOT NULL,
-                            fecha_emision DATE NOT NULL,
-                            fecha_vencimiento DATE NOT NULL,
-                            lugar_pago VARCHAR(255) NOT NULL,
-                            estado ENUM('Vigente','Cancelado') DEFAULT 'Vigente',
-                            observaciones TEXT NULL,
-                            PRIMARY KEY (id),
-                            UNIQUE KEY numero_pagare (numero_pagare),
-                            KEY venta_credito_id (venta_credito_id),
-                            KEY cliente_id (cliente_id)
-                        ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
-                    }
-                    
+                    // Verificar que detalle_ventas_credito existe
                     $stmt = $pdo->query("SHOW TABLES LIKE 'detalle_ventas_credito'");
                     if ($stmt->rowCount() == 0) {
-                        $pdo->exec("CREATE TABLE detalle_ventas_credito (
-                            id INT(11) NOT NULL AUTO_INCREMENT,
-                            venta_credito_id INT(11) NOT NULL,
-                            producto_id INT(11) NOT NULL,
-                            cantidad DECIMAL(10,2) NOT NULL,
-                            precio_unitario DECIMAL(15,2) NOT NULL,
-                            valor_venta_5 DECIMAL(15,2) DEFAULT 0,
-                            valor_venta_10 DECIMAL(15,2) DEFAULT 0,
-                            valor_venta_exenta DECIMAL(15,2) DEFAULT 0,
-                            total_parcial DECIMAL(15,2) NOT NULL,
-                            PRIMARY KEY (id),
-                            KEY venta_credito_id (venta_credito_id),
-                            KEY producto_id (producto_id)
-                        ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+                        $mensaje = "Error: La tabla detalle_ventas_credito no existe y no se pudo crear.";
                     }
-                } catch (Exception $e2) {
-                    error_log("Error al crear tablas de crédito: " . $e2->getMessage());
+                } catch (Exception $e) {
+                    $mensaje = "Error al verificar tabla detalle_ventas_credito: " . $e->getMessage();
                 }
             }
             
-            try {
-                $pdo->beginTransaction();
+            if (empty($mensaje)) {
+                try {
+                    $pdo->beginTransaction();
                 
                 // Descontar stock de productos
                 $stmt_stock = $pdo->prepare("UPDATE productos SET stock=stock-:cantidad WHERE id=:producto_id");
@@ -360,10 +387,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: ventas.php?success=1&credito_id=".$venta_credito_id);
                 exit();
                 
-            } catch (Exception $e) {
-                $pdo->rollBack();
-                error_log("Error al crear crédito: " . $e->getMessage());
-                $mensaje = "Error al crear crédito: " . $e->getMessage();
+                } catch (Exception $e) {
+                    if ($pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
+                    error_log("Error al crear crédito: " . $e->getMessage());
+                    $mensaje = "Error al crear crédito: " . $e->getMessage();
+                }
+            } else {
+                // Si hubo error en la creación de tablas, no continuar
+                error_log("Error: No se puede crear crédito porque faltan tablas. Mensaje: " . $mensaje);
             }
         } else {
             // Venta de contado - crear factura normalmente

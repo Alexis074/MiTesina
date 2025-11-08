@@ -40,6 +40,64 @@ $empresa = array(
 );
 ?>
 
+<?php
+// Función para convertir número a letras
+function numero_a_letras($numero) {
+    $numero = round($numero);
+    if ($numero == 0) return 'CERO GUARANIES';
+    
+    $unidades = ['', 'UN', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE'];
+    $decenas = ['', 'DIEZ', 'VEINTE', 'TREINTA', 'CUARENTA', 'CINCUENTA', 'SESENTA', 'SETENTA', 'OCHENTA', 'NOVENTA'];
+    $centenas = ['', 'CIENTO', 'DOSCIENTOS', 'TRESCIENTOS', 'CUATROCIENTOS', 'QUINIENTOS', 'SEISCIENTOS', 'SETECIENTOS', 'OCHOCIENTOS', 'NOVECIENTOS'];
+    $especiales = [11=>'ONCE',12=>'DOCE',13=>'TRECE',14=>'CATORCE',15=>'QUINCE'];
+    
+    $partes = [];
+    if ($numero >= 1000000) {
+        $millones = (int)floor($numero / 1000000);
+        $partes[] = ($millones == 1 ? 'UN MILLON' : numero_a_letras($millones) . ' MILLONES');
+        $numero = $numero % 1000000;
+    }
+    if ($numero >= 1000) {
+        $miles = (int)floor($numero / 1000);
+        if ($miles == 1) {
+            $partes[] = 'MIL';
+        } else {
+            $partes[] = numero_a_letras($miles) . ' MIL';
+        }
+        $numero = $numero % 1000;
+    }
+    if ($numero > 0) {
+        if ($numero == 100) {
+            $partes[] = 'CIEN';
+        } else {
+            if ($numero > 100) {
+                $c = (int)floor($numero / 100);
+                $partes[] = $centenas[$c];
+                $numero = $numero % 100;
+            }
+            if ($numero >= 11 && $numero <= 15) {
+                $partes[] = $especiales[$numero];
+            } elseif ($numero >= 16 && $numero <= 19) {
+                $partes[] = 'DIECI' . $unidades[$numero - 10];
+            } elseif ($numero == 10 || $numero == 20 || $numero == 30 || $numero == 40 || $numero == 50 || $numero == 60 || $numero == 70 || $numero == 80 || $numero == 90) {
+                $d = (int)floor($numero / 10);
+                $partes[] = $decenas[$d];
+            } elseif ($numero > 20 && $numero < 30) {
+                $partes[] = 'VEINTI' . $unidades[$numero - 20];
+            } elseif ($numero > 30 && $numero < 100) {
+                $d = (int)floor($numero / 10);
+                $u = $numero % 10;
+                $partes[] = $decenas[$d];
+                if ($u != 0) $partes[] = $unidades[$u];
+            } elseif ($numero > 0 && $numero < 10) {
+                $partes[] = $unidades[$numero];
+            }
+        }
+    }
+    
+    return implode(' ', $partes) . ' GUARANIES';
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -47,36 +105,53 @@ $empresa = array(
 <title>Recibo de Pago N° <?php echo htmlspecialchars($recibo['numero_recibo']); ?></title>
 <link rel="stylesheet" href="/repuestos/style.css">
 <style>
-body { font-family: Arial, sans-serif; margin: 20px; padding: 0; background: #f7f7f7; }
+body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f7f7f7; }
 .recibo-container { width: 800px; margin: 20px auto; background: white; padding: 40px; border: 2px solid #000; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
-.header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #000; padding-bottom: 20px; }
-.empresa-nombre { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-.empresa-datos { font-size: 13px; margin-bottom: 5px; }
-.titulo { font-size: 28px; font-weight: bold; text-align: center; margin: 30px 0; text-decoration: underline; }
-.datos-section { display: flex; justify-content: space-between; margin: 20px 0; }
+.encabezado { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 15px; }
+.encabezado img { height: 70px; }
+.empresa-datos { text-align: right; font-size: 13px; }
+.empresa-nombre { font-weight: bold; font-size: 18px; margin-bottom: 5px; }
+.titulo { text-align: center; background: #0b3d91; color: white; padding: 10px 0; margin: 20px 0; font-size: 22px; font-weight: bold; border-radius: 4px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.datos-section { display: flex; justify-content: space-between; margin: 20px 0; font-size: 13px; }
 .datos-left, .datos-right { width: 48%; }
-.datos-label { font-weight: bold; margin-bottom: 5px; }
-.datos-value { margin-bottom: 10px; }
-.table-recibo { width: 100%; border-collapse: collapse; margin: 30px 0; }
-.table-recibo th, .table-recibo td { border: 1px solid #000; padding: 12px; text-align: left; }
-.table-recibo th { background: #f0f0f0; font-weight: bold; }
-.total-section { text-align: right; margin-top: 20px; font-size: 18px; font-weight: bold; }
-.footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #000; text-align: center; font-size: 12px; }
-.firma-section { margin-top: 60px; display: flex; justify-content: space-between; }
-.firma-box { width: 45%; text-align: center; border-top: 1px solid #000; padding-top: 10px; }
-.btn-print { display: inline-block; padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0; }
+.datos-label { font-weight: bold; margin-bottom: 3px; }
+.datos-value { margin-bottom: 10px; padding: 5px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 3px; }
+.table-recibo { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 13px; }
+.table-recibo th, .table-recibo td { border: 1px solid #000; padding: 10px; text-align: left; }
+.table-recibo th { background: #e8e8e8; font-weight: bold; text-align: center; }
+.total-section { margin-top: 20px; padding: 15px; background: #f0f0f0; border: 2px solid #000; border-radius: 4px; }
+.total-numero { text-align: right; font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+.total-letras { font-size: 13px; font-style: italic; text-align: center; padding: 10px; background: white; border: 1px solid #000; border-radius: 3px; }
+.firma-section { margin-top: 50px; display: flex; justify-content: space-between; }
+.firma-box { width: 45%; text-align: center; border-top: 2px solid #000; padding-top: 50px; }
+.firma-box strong { font-size: 14px; }
+.footer { margin-top: 40px; padding-top: 15px; border-top: 1px solid #ccc; text-align: center; font-size: 11px; color: #666; }
+.btn-print { display: inline-block; padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 4px; margin: 10px 5px; }
 .btn-print:hover { background: #1e40af; }
-@media print { .btn-print { display: none; } body { background: white; } }
+.btn-cancelar { display: inline-block; padding: 10px 20px; background: #6b7280; color: white; text-decoration: none; border-radius: 4px; margin: 10px 5px; }
+.btn-cancelar:hover { background: #4b5563; }
+@media print { 
+    .btn-print, .btn-cancelar { display: none; } 
+    body { background: white; margin: 0; padding: 0; }
+    .recibo-container { box-shadow: none; margin: 0; padding: 30px; }
+}
+.observaciones { margin-top: 15px; padding: 10px; background: #f9fafb; border-left: 4px solid #2563eb; font-size: 12px; }
 </style>
 </head>
-<body onload="window.print();">
+<body>
 
 <div class="recibo-container">
-    <div class="header">
-        <div class="empresa-nombre"><?= htmlspecialchars($empresa['nombre']) ?></div>
-        <div class="empresa-datos">RUC: <?= htmlspecialchars($empresa['ruc']) ?></div>
-        <div class="empresa-datos"><?= htmlspecialchars($empresa['direccion']) ?></div>
-        <div class="empresa-datos">Tel: <?= htmlspecialchars($empresa['telefono']) ?> | Email: <?= htmlspecialchars($empresa['email']) ?></div>
+    <div class="encabezado">
+        <div>
+            <img src="/repuestos/img/logo3.png" alt="Logo" onerror="this.style.display='none'">
+        </div>
+        <div class="empresa-datos">
+            <div class="empresa-nombre"><?= htmlspecialchars($empresa['nombre']) ?></div>
+            <div>RUC: <?= htmlspecialchars($empresa['ruc']) ?></div>
+            <div><?= htmlspecialchars($empresa['direccion']) ?></div>
+            <div>Tel: <?= htmlspecialchars($empresa['telefono']) ?></div>
+            <div>Email: <?= htmlspecialchars($empresa['email']) ?></div>
+        </div>
     </div>
 
     <div class="titulo">RECIBO DE DINERO</div>
@@ -86,12 +161,12 @@ body { font-family: Arial, sans-serif; margin: 20px; padding: 0; background: #f7
             <div class="datos-label">N° de Recibo:</div>
             <div class="datos-value"><?= htmlspecialchars($recibo['numero_recibo']) ?></div>
             
-            <div class="datos-label">Fecha:</div>
+            <div class="datos-label">Fecha y Hora:</div>
             <div class="datos-value"><?= date('d/m/Y H:i', strtotime($recibo['fecha_pago'])) ?></div>
             
             <div class="datos-label">Cliente:</div>
             <div class="datos-value">
-                <?= htmlspecialchars($recibo['nombre'] . ' ' . $recibo['apellido']) ?><br>
+                <strong><?= htmlspecialchars($recibo['nombre'] . ' ' . $recibo['apellido']) ?></strong><br>
                 <?php if($recibo['ruc']): ?>
                 RUC: <?= htmlspecialchars($recibo['ruc']) ?><br>
                 <?php endif; ?>
@@ -108,8 +183,8 @@ body { font-family: Arial, sans-serif; margin: 20px; padding: 0; background: #f7
             <div class="datos-label">Forma de Pago:</div>
             <div class="datos-value"><?= htmlspecialchars($recibo['forma_pago']) ?></div>
             
-            <?php if($recibo['numero_factura']): ?>
-            <div class="datos-label">Factura:</div>
+            <?php if($recibo['numero_factura'] && strpos($recibo['numero_factura'], 'CREDITO-') === false): ?>
+            <div class="datos-label">Factura Relacionada:</div>
             <div class="datos-value"><?= htmlspecialchars($recibo['numero_factura']) ?></div>
             <?php endif; ?>
             
@@ -123,24 +198,29 @@ body { font-family: Arial, sans-serif; margin: 20px; padding: 0; background: #f7
     <table class="table-recibo">
         <thead>
             <tr>
-                <th>Concepto</th>
-                <th style="text-align: right;">Monto</th>
+                <th style="width: 70%;">Concepto</th>
+                <th style="width: 30%;">Monto</th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td><?= htmlspecialchars($recibo['concepto']) ?></td>
-                <td style="text-align: right;"><?= number_format($recibo['monto'], 0, ',', '.') ?> Gs</td>
+                <td style="text-align: right; font-weight: bold;"><?= number_format($recibo['monto'], 0, ',', '.') ?> Gs</td>
             </tr>
         </tbody>
     </table>
 
     <div class="total-section">
-        TOTAL RECIBIDO: <?= number_format($recibo['monto'], 0, ',', '.') ?> Gs
+        <div class="total-numero">
+            TOTAL RECIBIDO: <?= number_format($recibo['monto'], 0, ',', '.') ?> Gs
+        </div>
+        <div class="total-letras">
+            <strong>Son:</strong> <?= strtoupper(numero_a_letras($recibo['monto'])) ?>
+        </div>
     </div>
 
     <?php if($recibo['observaciones']): ?>
-    <div style="margin-top: 20px; padding: 10px; background: #f9fafb; border-left: 4px solid #2563eb;">
+    <div class="observaciones">
         <strong>Observaciones:</strong><br>
         <?= nl2br(htmlspecialchars($recibo['observaciones'])) ?>
     </div>
@@ -149,17 +229,21 @@ body { font-family: Arial, sans-serif; margin: 20px; padding: 0; background: #f7
     <div class="firma-section">
         <div class="firma-box">
             <strong>RECIBÍ CONFORME</strong><br><br><br>
-            <?= htmlspecialchars($recibo['nombre'] . ' ' . $recibo['apellido']) ?>
+            <div style="margin-top: 20px;">
+                <?= htmlspecialchars($recibo['nombre'] . ' ' . $recibo['apellido']) ?>
+            </div>
         </div>
         <div class="firma-box">
             <strong>ENTREGADO POR</strong><br><br><br>
-            <?= htmlspecialchars($empresa['nombre']) ?>
+            <div style="margin-top: 20px;">
+                <?= htmlspecialchars($empresa['nombre']) ?>
+            </div>
         </div>
     </div>
 
     <div class="footer">
-        <strong>** Este documento es un comprobante de pago **</strong><br>
-        Generado por el sistema de gestión de Repuestos Doble A<br>
+        <strong>** Este documento es un comprobante de pago válido **</strong><br>
+        Generado por el sistema de gestión de <?= htmlspecialchars($empresa['nombre']) ?><br>
         Fecha de impresión: <?= date('d/m/Y H:i:s') ?>
     </div>
 </div>
@@ -168,7 +252,7 @@ body { font-family: Arial, sans-serif; margin: 20px; padding: 0; background: #f7
     <a href="imprimir_recibo.php?id=<?= $recibo_id ?>" target="_blank" class="btn-print">
         <i class="fas fa-print"></i> Imprimir Recibo
     </a>
-    <a href="cuotas.php" class="btn-cancelar" style="display: inline-block; padding: 10px 20px;">
+    <a href="cuotas.php" class="btn-cancelar">
         <i class="fas fa-arrow-left"></i> Volver a Cuotas
     </a>
 </div>

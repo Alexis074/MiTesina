@@ -20,11 +20,11 @@ if (!$cuota_id) {
 try {
     $stmt_cuota = $pdo->prepare("SELECT c.*, vc.factura_id, vc.cliente_id, vc.monto_total, vc.numero_cuotas,
                                   cl.nombre, cl.apellido, cl.telefono, cl.email, cl.direccion, cl.ruc,
-                                  fv.numero_factura
+                                  COALESCE(fv.numero_factura, CONCAT('CREDITO-', vc.id)) as numero_factura
                                   FROM cuotas_credito c
                                   JOIN ventas_credito vc ON c.venta_credito_id = vc.id
                                   JOIN clientes cl ON vc.cliente_id = cl.id
-                                  JOIN cabecera_factura_ventas fv ON vc.factura_id = fv.id
+                                  LEFT JOIN cabecera_factura_ventas fv ON vc.factura_id = fv.id
                                   WHERE c.id = ?");
     $stmt_cuota->execute([$cuota_id]);
     $cuota = $stmt_cuota->fetch();
@@ -34,6 +34,7 @@ try {
     }
 } catch (Exception $e) {
     $mensaje = "Error: " . $e->getMessage();
+    error_log("Error al obtener cuota: " . $e->getMessage());
 }
 
 // Procesar pago

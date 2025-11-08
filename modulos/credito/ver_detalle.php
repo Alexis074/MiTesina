@@ -19,10 +19,11 @@ if (!$venta_credito_id) {
 try {
     $stmt_credito = $pdo->prepare("SELECT vc.*, 
                                     cl.nombre, cl.apellido, cl.telefono, cl.email, cl.direccion, cl.ruc,
-                                    fv.numero_factura, fv.fecha_hora
+                                    COALESCE(fv.numero_factura, CONCAT('CREDITO-', vc.id)) as numero_factura,
+                                    fv.fecha_hora
                                     FROM ventas_credito vc
                                     JOIN clientes cl ON vc.cliente_id = cl.id
-                                    JOIN cabecera_factura_ventas fv ON vc.factura_id = fv.id
+                                    LEFT JOIN cabecera_factura_ventas fv ON vc.factura_id = fv.id
                                     WHERE vc.id = ?");
     $stmt_credito->execute([$venta_credito_id]);
     $venta_credito = $stmt_credito->fetch();
