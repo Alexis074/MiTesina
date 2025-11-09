@@ -68,6 +68,15 @@ $registros = $stmt->fetchAll();
                     case 'logout':
                         $accion_class = 'style="background: #7c3aed; color: white; padding: 4px 8px; border-radius: 4px;"';
                         break;
+                    case 'abrir':
+                        $accion_class = 'style="background: #06b6d4; color: white; padding: 4px 8px; border-radius: 4px;"'; // Cyan/Turquesa
+                        break;
+                    case 'cerrar':
+                        $accion_class = 'style="background:rgb(128, 138, 122); color: white; padding: 4px 8px; border-radius: 4px;"'; // Naranja/Ámbar
+                        break;
+                    case 'pagar':
+                        $accion_class = 'style="background: #eab308; color: white; padding: 4px 8px; border-radius: 4px;"'; // Amarillo/Dorado
+                        break;
                 }
                 echo '<td><span '.$accion_class.'>'.$accion_text.'</span></td>';
                 echo '<td>'.htmlspecialchars($registro['modulo']).'</td>';
