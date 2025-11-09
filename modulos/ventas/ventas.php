@@ -537,10 +537,13 @@ if (isset($_GET['success']) && isset($_GET['factura_id'])) {
                     </select>
                 </div>
                 
-                <div class="form-group-horizontal">
+            </div>
+            
+            <div class="form-row-horizontal" style="margin-top: 15px;">
+                <div class="form-group-horizontal" style="flex: 1;">
                     <label>&nbsp;</label>
-                    <button type="button" id="btn_agregar_carrito" class="btn-agregar-carrito">
-                        <i class="fas fa-cart-plus"></i> Agregar
+                    <button type="button" id="btn_agregar_carrito" class="btn-agregar-carrito" style="width: 100%;">
+                        <i class="fas fa-cart-plus"></i> Agregar Producto al Carrito
                     </button>
                 </div>
             </div>
@@ -620,10 +623,12 @@ if (isset($_GET['success']) && isset($_GET['factura_id'])) {
                         <option value="6" selected>6 meses</option>
                     </select>
                 </div>
-                
-                <div class="form-group-horizontal">
+            </div>
+            
+            <div class="form-row-horizontal" style="margin-top: 15px;">
+                <div class="form-group-horizontal" style="flex: 1;">
                     <label>&nbsp;</label>
-                    <button type="submit" class="btn-confirmar-venta">
+                    <button type="submit" class="btn-confirmar-venta" style="width: 100%;">
                         <i class="fas fa-check"></i> Confirmar Venta
                     </button>
                 </div>
@@ -872,6 +877,11 @@ input[type="number"].form-input-horizontal::-webkit-inner-spin-button {
     font-weight: bold;
     cursor: pointer;
     transition: background 0.3s;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
 .btn-confirmar-venta:hover {

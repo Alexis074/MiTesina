@@ -1,5 +1,5 @@
 -- Backup de Base de Datos - Repuestos Doble A
--- Fecha: 2025-11-08 19:46:43
+-- Fecha: 2025-11-09 12:12:19
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -20,7 +20,7 @@ CREATE TABLE `auditoria` (
   KEY `idx_fecha` (`fecha_hora`),
   KEY `idx_modulo` (`modulo`),
   KEY `idx_accion` (`accion`)
-) ENGINE=InnoDB AUTO_INCREMENT=80 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=104 DEFAULT CHARSET=utf8;
 
 -- Volcado de datos de la tabla `auditoria`
 INSERT INTO `auditoria` (`id`, `usuario_id`, `nombre_usuario`, `accion`, `modulo`, `detalle`, `fecha_hora`, `ip_address`) VALUES
@@ -74,7 +74,31 @@ INSERT INTO `auditoria` (`id`, `usuario_id`, `nombre_usuario`, `accion`, `modulo
 ('76', '1', 'Administrador (admin)', 'login', 'sistema', 'Usuario admin inició sesión', '2025-11-08 19:25:01', '127.0.0.1'),
 ('77', '1', 'Administrador (admin)', 'abrir', 'caja', 'Caja abierta con monto inicial: 5.000.000 Gs (ID Caja: 13)', '2025-11-08 19:34:16', '127.0.0.1'),
 ('78', '1', 'Administrador (admin)', 'anular', 'facturacion', 'Factura #001-001-000071 anulada. Motivo: error de tipeo', '2025-11-08 19:34:37', '127.0.0.1'),
-('79', '1', 'Administrador (admin)', 'crear', 'ventas', 'Factura #001-001-000074 creada. Cliente ID: 5, Total: 240.000', '2025-11-08 19:35:21', '127.0.0.1');
+('79', '1', 'Administrador (admin)', 'crear', 'ventas', 'Factura #001-001-000074 creada. Cliente ID: 5, Total: 240.000', '2025-11-08 19:35:21', '127.0.0.1'),
+('80', '1', 'Administrador (admin)', 'crear', 'backup', 'Backup creado: backup_2025-11-08_19-46-43.sql', '2025-11-08 19:46:43', '127.0.0.1'),
+('81', '1', 'Administrador (admin)', 'crear', 'compras', 'Compra #27 creada. Proveedor: Moto Premium, Total: 158.182', '2025-11-08 19:49:38', '127.0.0.1'),
+('82', '1', 'Administrador (admin)', 'crear', 'credito', 'Venta a crédito creada. Cliente ID: 4, Total: 158.182, Cuotas: 4', '2025-11-08 19:56:14', '127.0.0.1'),
+('83', '1', 'Administrador (admin)', 'pagar', 'credito', 'Pago de cuota #1 - Cliente: Ana Martinez - Monto: 39.546 Gs - Recibo: REC-2025-000001', '2025-11-08 20:06:21', '127.0.0.1'),
+('84', '1', 'Administrador (admin)', 'pagar', 'credito', 'Pago de cuota #2 - Cliente: Ana Martinez - Monto: 39.546 Gs - Recibo: REC-2025-000002', '2025-11-08 20:08:10', '127.0.0.1'),
+('85', '1', 'Administrador (admin)', 'pagar', 'credito', 'Pago de cuota #3 - Cliente: Ana Martinez - Monto: 39.546 Gs - Recibo: REC-2025-000003', '2025-11-08 20:08:16', '127.0.0.1'),
+('86', '1', 'Administrador (admin)', 'pagar', 'credito', 'Pago de cuota #4 - Cliente: Ana Martinez - Monto: 39.544 Gs - Recibo: REC-2025-000004', '2025-11-08 20:08:26', '127.0.0.1'),
+('87', '1', 'Administrador (admin)', 'login', 'sistema', 'Usuario admin inició sesión', '2025-11-09 12:02:27', '127.0.0.1'),
+('88', '1', 'Administrador (admin)', 'cerrar', 'caja', 'Caja cerrada - Monto inicial: 5.000.000 Gs | Monto final: 5.081.818 Gs | Saldo: 81.818 Gs | Ingresos: 556.364 Gs | Egresos: 474.546 Gs (ID Caja: 13)', '2025-11-09 12:02:32', '127.0.0.1'),
+('89', '1', 'Administrador (admin)', 'abrir', 'caja', 'Caja abierta con monto inicial: 1.000.000 Gs (ID Caja: 14)', '2025-11-09 12:06:44', '127.0.0.1'),
+('90', '1', 'Administrador (admin)', 'crear', 'ventas', 'Factura #001-001-000076 creada. Cliente ID: 2, Total: 158.182', '2025-11-09 12:07:27', '127.0.0.1'),
+('91', '1', 'Administrador (admin)', 'crear', 'compras', 'Compra #28 creada. Proveedor: Moto Cave Tuning Racing, Total: 189.394', '2025-11-09 12:07:52', '127.0.0.1'),
+('92', '1', 'Administrador (admin)', 'eliminar', 'backup', 'Backup eliminado: backup_2025-11-04_22-08-24.sql', '2025-11-09 12:10:59', '127.0.0.1'),
+('93', '1', 'Administrador (admin)', 'eliminar', 'backup', 'Backup eliminado: backup_2025-11-05_16-49-19.sql', '2025-11-09 12:11:01', '127.0.0.1'),
+('94', '1', 'Administrador (admin)', 'eliminar', 'backup', 'Backup eliminado: backup_2025-11-05_00-05-37.sql', '2025-11-09 12:11:03', '127.0.0.1'),
+('95', '1', 'Administrador (admin)', 'eliminar', 'backup', 'Backup eliminado: backup_2025-11-05_00-05-30.sql', '2025-11-09 12:11:05', '127.0.0.1'),
+('96', '1', 'Administrador (admin)', 'crear', 'backup', 'Backup creado: backup_2025-11-09_12-11-48.sql', '2025-11-09 12:11:49', '127.0.0.1'),
+('97', '1', 'Administrador (admin)', 'crear', 'backup', 'Backup creado: backup_2025-11-09_12-11-55.sql', '2025-11-09 12:11:55', '127.0.0.1'),
+('98', '1', 'Administrador (admin)', 'crear', 'backup', 'Backup creado: backup_2025-11-09_12-11-58.sql', '2025-11-09 12:11:58', '127.0.0.1'),
+('99', '1', 'Administrador (admin)', 'crear', 'backup', 'Backup creado: backup_2025-11-09_12-12-01.sql', '2025-11-09 12:12:01', '127.0.0.1'),
+('100', '1', 'Administrador (admin)', 'eliminar', 'backup', 'Backup eliminado: backup_2025-11-08_19-46-43.sql', '2025-11-09 12:12:09', '127.0.0.1'),
+('101', '1', 'Administrador (admin)', 'eliminar', 'backup', 'Backup eliminado: backup_2025-11-09_12-11-55.sql', '2025-11-09 12:12:12', '127.0.0.1'),
+('102', '1', 'Administrador (admin)', 'eliminar', 'backup', 'Backup eliminado: backup_2025-11-09_12-11-58.sql', '2025-11-09 12:12:14', '127.0.0.1'),
+('103', '1', 'Administrador (admin)', 'eliminar', 'backup', 'Backup eliminado: backup_2025-11-09_12-11-48.sql', '2025-11-09 12:12:15', '127.0.0.1');
 
 
 -- Estructura de tabla `cabecera_factura_compras`
@@ -97,7 +121,7 @@ CREATE TABLE `cabecera_factura_compras` (
   KEY `idx_fecha` (`fecha_hora`),
   KEY `idx_proveedor` (`proveedor_id`),
   CONSTRAINT `cabecera_factura_compras_ibfk_1` FOREIGN KEY (`proveedor_id`) REFERENCES `proveedores` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
 
 -- Volcado de datos de la tabla `cabecera_factura_compras`
 INSERT INTO `cabecera_factura_compras` (`id`, `numero_factura`, `proveedor_id`, `fecha_hora`, `monto_total`, `condicion_compra`, `forma_pago`, `timbrado`, `numero_factura_proveedor`, `created_at`, `inicio_vigencia`, `fin_vigencia`) VALUES
@@ -107,7 +131,9 @@ INSERT INTO `cabecera_factura_compras` (`id`, `numero_factura`, `proveedor_id`, 
 ('4', '001-001-000100', '5', '2025-11-07 14:46:20', '158182.00', 'Contado', 'Efectivo', '03296142', '', '2025-11-07 14:46:20', '2025-01-01', '2025-12-31'),
 ('5', '001-001-000008', '9', '2025-11-07 14:53:49', '486840.00', 'Contado', 'Efectivo', '98616271', '', '2025-11-07 14:53:49', '2025-01-01', '2025-12-31'),
 ('6', '001-001-000082', '2', '2025-11-07 15:02:46', '87273.00', 'Contado', 'Efectivo', '68011108', '', '2025-11-07 15:02:46', '2025-01-01', '2025-12-31'),
-('7', '001-001-000016', '2', '2025-11-07 15:03:22', '499913.00', 'Contado', 'Efectivo', '56500183', '', '2025-11-07 15:03:22', '2025-01-01', '2025-12-31');
+('7', '001-001-000016', '2', '2025-11-07 15:03:22', '499913.00', 'Contado', 'Efectivo', '56500183', '', '2025-11-07 15:03:22', '2025-01-01', '2025-12-31'),
+('8', '001-001-000093', '9', '2025-11-08 19:49:38', '158182.00', 'Contado', 'Efectivo', '60708770', '', '2025-11-08 19:49:38', '2025-01-01', '2025-12-31'),
+('9', '001-001-000033', '2', '2025-11-09 12:07:52', '189394.00', 'Contado', 'Efectivo', '89960418', '', '2025-11-09 12:07:52', '2025-01-01', '2025-12-31');
 
 
 -- Estructura de tabla `cabecera_factura_ventas`
@@ -131,7 +157,7 @@ CREATE TABLE `cabecera_factura_ventas` (
   UNIQUE KEY `idx_numero_factura_unique` (`numero_factura`),
   UNIQUE KEY `idx_timbrado_unique` (`timbrado`),
   KEY `cliente_id` (`cliente_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=75 DEFAULT CHARSET=utf8mb4;
+) ENGINE=MyISAM AUTO_INCREMENT=77 DEFAULT CHARSET=utf8mb4;
 
 -- Volcado de datos de la tabla `cabecera_factura_ventas`
 INSERT INTO `cabecera_factura_ventas` (`id`, `numero_factura`, `condicion_venta`, `forma_pago`, `fecha_hora`, `cliente_id`, `monto_total`, `timbrado`, `inicio_vigencia`, `fin_vigencia`, `anulada`, `fecha_anulacion`, `usuario_anulacion_id`, `motivo_anulacion`) VALUES
@@ -149,7 +175,9 @@ INSERT INTO `cabecera_factura_ventas` (`id`, `numero_factura`, `condicion_venta`
 ('71', '001-001-000071', 'Contado', 'Efectivo', '2025-11-07 15:02:25', '3', '228008.00', '4571586', '2025-01-01', '2025-12-31', '1', '2025-11-08 19:34:37', '1', 'error de tipeo'),
 ('72', '001-001-000072', 'Contado', 'Efectivo', '2025-11-07 15:04:45', '7', '1707273.00', '4571587', '2025-01-01', '2025-12-31', '0', NULL, NULL, NULL),
 ('73', '001-001-000073', 'Contado', 'Efectivo', '2025-11-07 15:05:24', '5', '1418182.00', '4571588', '2025-01-01', '2025-12-31', '0', NULL, NULL, NULL),
-('74', '001-001-000074', 'Crédito', 'Tarjeta', '2025-11-08 19:35:21', '5', '240000.00', '4571589', '2025-01-01', '2025-12-31', '0', NULL, NULL, NULL);
+('74', '001-001-000074', 'Crédito', 'Tarjeta', '2025-11-08 19:35:21', '5', '240000.00', '4571589', '2025-01-01', '2025-12-31', '0', NULL, NULL, NULL),
+('75', '001-001-000075', 'Crédito', 'Efectivo', '2025-11-08 20:08:26', '4', '158182.00', '4571590', '2025-01-01', '2025-12-31', '0', NULL, NULL, NULL),
+('76', '001-001-000076', 'Contado', 'Efectivo', '2025-11-09 12:07:27', '2', '158182.00', '4571591', '2025-01-01', '2025-12-31', '0', NULL, NULL, NULL);
 
 
 -- Estructura de tabla `caja`
@@ -162,14 +190,15 @@ CREATE TABLE `caja` (
   `estado` enum('Abierta','Cerrada') NOT NULL DEFAULT 'Abierta',
   `created_at` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4;
+) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4;
 
 -- Volcado de datos de la tabla `caja`
 INSERT INTO `caja` (`id`, `fecha`, `monto_inicial`, `monto_final`, `estado`, `created_at`) VALUES
 ('10', '2025-11-04', '1000000.00', '1132000.00', 'Cerrada', '2025-11-04 22:47:22'),
 ('11', '2025-11-04', '4.00', '132004.00', 'Cerrada', '2025-11-04 22:48:07'),
 ('12', '2025-11-04', '2000000.00', '3183974.00', 'Cerrada', '2025-11-04 22:58:12'),
-('13', '2025-11-08', '5000000.00', NULL, 'Abierta', '2025-11-08 19:34:16');
+('13', '2025-11-08', '5000000.00', '5081818.00', 'Cerrada', '2025-11-08 19:34:16'),
+('14', '2025-11-09', '1000000.00', NULL, 'Abierta', '2025-11-09 12:06:44');
 
 
 -- Estructura de tabla `caja_movimientos`
@@ -184,7 +213,7 @@ CREATE TABLE `caja_movimientos` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `caja_id` (`caja_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4;
+) ENGINE=MyISAM AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4;
 
 -- Volcado de datos de la tabla `caja_movimientos`
 INSERT INTO `caja_movimientos` (`id`, `caja_id`, `fecha`, `tipo`, `concepto`, `monto`, `created_at`) VALUES
@@ -194,7 +223,14 @@ INSERT INTO `caja_movimientos` (`id`, `caja_id`, `fecha`, `tipo`, `concepto`, `m
 ('28', '12', '2025-11-07 14:46:20', 'Egreso', 'Compra a proveedor ID 5, compra ID 23', '158182.00', '2025-11-07 14:46:20'),
 ('29', '12', '2025-11-07 14:53:49', 'Egreso', 'Compra a proveedor ID 9, compra ID 24', '486840.00', '2025-11-07 14:53:49'),
 ('30', '12', '2025-11-07 15:02:46', 'Egreso', 'Compra a proveedor ID 2, compra ID 25', '87273.00', '2025-11-07 15:02:46'),
-('31', '12', '2025-11-07 15:03:22', 'Egreso', 'Compra a proveedor ID 2, compra ID 26', '499913.00', '2025-11-07 15:03:22');
+('31', '12', '2025-11-07 15:03:22', 'Egreso', 'Compra a proveedor ID 2, compra ID 26', '499913.00', '2025-11-07 15:03:22'),
+('32', '13', '2025-11-08 19:49:38', 'Egreso', 'Compra a proveedor ID 9, compra ID 27', '158182.00', '2025-11-08 19:49:38'),
+('33', '13', '2025-11-08 20:06:21', 'Ingreso', 'Pago cuota #1 - Cliente: Ana Martinez', '39546.00', '2025-11-08 20:06:21'),
+('34', '13', '2025-11-08 20:08:10', 'Ingreso', 'Pago cuota #2 - Cliente: Ana Martinez', '39546.00', '2025-11-08 20:08:10'),
+('35', '13', '2025-11-08 20:08:16', 'Ingreso', 'Pago cuota #3 - Cliente: Ana Martinez', '39546.00', '2025-11-08 20:08:16'),
+('36', '13', '2025-11-08 20:08:26', 'Ingreso', 'Pago cuota #4 - Cliente: Ana Martinez', '39544.00', '2025-11-08 20:08:26'),
+('37', '14', '2025-11-09 12:07:27', 'Ingreso', 'Venta - Factura #001-001-000076 - Cliente ID: 2', '158182.00', '2025-11-09 12:07:27'),
+('38', '14', '2025-11-09 12:07:52', 'Egreso', 'Compra a proveedor ID 2, compra ID 28', '189394.00', '2025-11-09 12:07:52');
 
 
 -- Estructura de tabla `clientes`
@@ -233,7 +269,7 @@ CREATE TABLE `compras` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `proveedor_id` (`proveedor_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4;
+) ENGINE=MyISAM AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4;
 
 -- Volcado de datos de la tabla `compras`
 INSERT INTO `compras` (`id`, `proveedor_id`, `fecha`, `total`, `estado`, `created_at`) VALUES
@@ -243,7 +279,9 @@ INSERT INTO `compras` (`id`, `proveedor_id`, `fecha`, `total`, `estado`, `create
 ('23', '5', '2025-11-07 14:46:20', '158182.00', 'Pendiente', '2025-11-07 14:46:20'),
 ('24', '9', '2025-11-07 14:53:49', '486840.00', 'Pendiente', '2025-11-07 14:53:49'),
 ('25', '2', '2025-11-07 15:02:46', '87273.00', 'Pendiente', '2025-11-07 15:02:46'),
-('26', '2', '2025-11-07 15:03:22', '499913.00', 'Pendiente', '2025-11-07 15:03:22');
+('26', '2', '2025-11-07 15:03:22', '499913.00', 'Pendiente', '2025-11-07 15:03:22'),
+('27', '9', '2025-11-08 19:49:38', '158182.00', 'Pendiente', '2025-11-08 19:49:38'),
+('28', '2', '2025-11-09 12:07:52', '189394.00', 'Pendiente', '2025-11-09 12:07:52');
 
 
 -- Estructura de tabla `cuotas_credito`
@@ -263,9 +301,15 @@ CREATE TABLE `cuotas_credito` (
   KEY `idx_estado` (`estado`),
   KEY `idx_fecha_vencimiento` (`fecha_vencimiento`),
   CONSTRAINT `cuotas_credito_ibfk_1` FOREIGN KEY (`venta_credito_id`) REFERENCES `ventas_credito` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4;
 
 -- Volcado de datos de la tabla `cuotas_credito`
+INSERT INTO `cuotas_credito` (`id`, `venta_credito_id`, `numero_cuota`, `monto`, `fecha_vencimiento`, `fecha_pago`, `monto_pagado`, `estado`, `observaciones`) VALUES
+('1', '3', '1', '39546.00', '2025-12-08', '2025-11-08 20:06:21', '39546.00', 'Pagada', ''),
+('2', '3', '2', '39546.00', '2026-01-07', '2025-11-08 20:08:10', '39546.00', 'Pagada', ''),
+('3', '3', '3', '39546.00', '2026-02-06', '2025-11-08 20:08:16', '39546.00', 'Pagada', ''),
+('4', '3', '4', '39544.00', '2026-03-08', '2025-11-08 20:08:26', '39544.00', 'Pagada', '');
+
 
 -- Estructura de tabla `detalle_factura_compras`
 DROP TABLE IF EXISTS `detalle_factura_compras`;
@@ -284,7 +328,7 @@ CREATE TABLE `detalle_factura_compras` (
   KEY `idx_producto` (`producto_id`),
   CONSTRAINT `detalle_factura_compras_ibfk_1` FOREIGN KEY (`factura_id`) REFERENCES `cabecera_factura_compras` (`id`) ON DELETE CASCADE,
   CONSTRAINT `detalle_factura_compras_ibfk_2` FOREIGN KEY (`producto_id`) REFERENCES `productos` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8;
 
 -- Volcado de datos de la tabla `detalle_factura_compras`
 INSERT INTO `detalle_factura_compras` (`id`, `factura_id`, `producto_id`, `cantidad`, `precio_unitario`, `subtotal`, `valor_compra_10`, `valor_compra_exenta`, `valor_compra_5`) VALUES
@@ -299,7 +343,10 @@ INSERT INTO `detalle_factura_compras` (`id`, `factura_id`, `producto_id`, `canti
 ('9', '7', '49', '1.00', '145000.00', '158182.00', '13182.00', '0.00', '0.00'),
 ('10', '7', '49', '1.00', '145000.00', '151905.00', '0.00', '0.00', '6905.00'),
 ('11', '7', '47', '1.00', '25000.00', '26190.00', '0.00', '0.00', '1190.00'),
-('12', '7', '86', '1.00', '150000.00', '163636.00', '13636.00', '0.00', '0.00');
+('12', '7', '86', '1.00', '150000.00', '163636.00', '13636.00', '0.00', '0.00'),
+('13', '8', '49', '1.00', '145000.00', '158182.00', '13182.00', '0.00', '0.00'),
+('14', '9', '80', '1.00', '140000.00', '152727.00', '12727.00', '0.00', '0.00'),
+('15', '9', '61', '1.00', '35000.00', '36667.00', '0.00', '0.00', '1667.00');
 
 
 -- Estructura de tabla `detalle_factura_ventas`
@@ -317,7 +364,7 @@ CREATE TABLE `detalle_factura_ventas` (
   PRIMARY KEY (`id`),
   KEY `factura_id` (`factura_id`),
   KEY `producto_id` (`producto_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=116 DEFAULT CHARSET=utf8mb4;
+) ENGINE=MyISAM AUTO_INCREMENT=118 DEFAULT CHARSET=utf8mb4;
 
 -- Volcado de datos de la tabla `detalle_factura_ventas`
 INSERT INTO `detalle_factura_ventas` (`id`, `factura_id`, `producto_id`, `cantidad`, `precio_unitario`, `valor_venta_5`, `valor_venta_10`, `valor_venta_exenta`, `total_parcial`) VALUES
@@ -343,7 +390,31 @@ INSERT INTO `detalle_factura_ventas` (`id`, `factura_id`, `producto_id`, `cantid
 ('112', '72', '48', '1', '140000.00', '0.00', '12727.00', '0.00', '152727.00'),
 ('113', '72', '55', '15', '95000.00', '0.00', '129546.00', '0.00', '1554546.00'),
 ('114', '73', '44', '20', '65000.00', '0.00', '118182.00', '0.00', '1418182.00'),
-('115', '74', '46', '1', '220000.00', '0.00', '20000.00', '0.00', '240000.00');
+('115', '74', '46', '1', '220000.00', '0.00', '20000.00', '0.00', '240000.00'),
+('116', '75', '49', '1', '145000.00', '0.00', '13182.00', '0.00', '158182.00'),
+('117', '76', '49', '1', '145000.00', '0.00', '13182.00', '0.00', '158182.00');
+
+
+-- Estructura de tabla `detalle_ventas_credito`
+DROP TABLE IF EXISTS `detalle_ventas_credito`;
+CREATE TABLE `detalle_ventas_credito` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `venta_credito_id` int(11) NOT NULL,
+  `producto_id` int(11) NOT NULL,
+  `cantidad` decimal(10,2) NOT NULL,
+  `precio_unitario` decimal(15,2) NOT NULL,
+  `valor_venta_5` decimal(15,2) DEFAULT '0.00',
+  `valor_venta_10` decimal(15,2) DEFAULT '0.00',
+  `valor_venta_exenta` decimal(15,2) DEFAULT '0.00',
+  `total_parcial` decimal(15,2) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `venta_credito_id` (`venta_credito_id`),
+  KEY `producto_id` (`producto_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;
+
+-- Volcado de datos de la tabla `detalle_ventas_credito`
+INSERT INTO `detalle_ventas_credito` (`id`, `venta_credito_id`, `producto_id`, `cantidad`, `precio_unitario`, `valor_venta_5`, `valor_venta_10`, `valor_venta_exenta`, `total_parcial`) VALUES
+('1', '3', '49', '1.00', '145000.00', '0.00', '13182.00', '0.00', '158182.00');
 
 
 -- Estructura de tabla `pagares`
@@ -439,7 +510,7 @@ INSERT INTO `productos` (`id`, `codigo`, `nombre`, `categoria`, `marca`, `modelo
 ('46', 'RE011', 'Bateria 12v', 'Electrico', 'Taiga', 'TG 125', '125', '220000.00', '23', '4', '4', '2025-09-25 20:00:00'),
 ('47', 'RE012', 'Bujia', 'Motor', 'Honda', 'CG 125', '125', '25000.00', '61', '12', '1', '2025-09-25 20:00:00'),
 ('48', 'RE013', 'Amortiguador trasero', 'Suspension', 'Leopard', 'LE 150', '150', '140000.00', '44', '5', '2', '2025-09-25 20:00:00'),
-('49', 'RE014', 'Amortiguador delantero', 'Suspension', 'Kenton', 'KT 200', '200', '145000.00', '57', '5', '3', '2025-09-25 20:00:00'),
+('49', 'RE014', 'Amortiguador delantero', 'Suspension', 'Kenton', 'KT 200', '200', '145000.00', '55', '5', '3', '2025-09-25 20:00:00'),
 ('50', 'RE015', 'Neumatico delantero 2.75-18', 'Llantas', 'Honda', 'CB 200', '200', '95000.00', '40', '4', '1', '2025-09-25 20:00:00'),
 ('51', 'RE016', 'Neumatico trasero 3.00-18', 'Llantas', 'Honda', 'CG 125', '125', '105000.00', '40', '4', '1', '2025-09-25 20:00:00'),
 ('52', 'RE017', 'Espejo retrovisor', 'Accesorios', 'Kenton', 'KT 200', '200', '45000.00', '90', '9', '2', '2025-09-25 20:00:00'),
@@ -451,7 +522,7 @@ INSERT INTO `productos` (`id`, `codigo`, `nombre`, `categoria`, `marca`, `modelo
 ('58', 'RE023', 'Escape completo', 'Motor', 'Honda', 'CB 200', '200', '180000.00', '67', '2', '3', '2025-09-25 20:00:00'),
 ('59', 'RE024', 'Luces delanteras', 'Electrico', 'Taiga', 'TG 125', '125', '75000.00', '70', '7', '4', '2025-09-25 20:00:00'),
 ('60', 'RE025', 'Luces traseras', 'Electrico', 'Taiga', 'TG 125', '125', '65000.00', '60', '6', '4', '2025-09-25 20:00:00'),
-('61', 'RE026', 'Bocina', 'Electrico', 'Honda', 'CG 125', '125', '35000.00', '88', '9', '1', '2025-09-25 20:00:00'),
+('61', 'RE026', 'Bocina', 'Electrico', 'Honda', 'CG 125', '125', '35000.00', '89', '9', '1', '2025-09-25 20:00:00'),
 ('62', 'RE027', 'Claxon', 'Electrico', 'Honda', 'Titan 150', '150', '35000.00', '29', '9', '1', '2025-09-25 20:00:00'),
 ('63', 'RE028', 'Porta placa', 'Accesorios', 'Leopard', 'LE 150', '150', '25000.00', '100', '10', '2', '2025-09-25 20:00:00'),
 ('64', 'RE029', 'Porta baul', 'Accesorios', 'Kenton', 'KT 200', '200', '45000.00', '80', '8', '3', '2025-09-25 20:00:00'),
@@ -470,7 +541,7 @@ INSERT INTO `productos` (`id`, `codigo`, `nombre`, `categoria`, `marca`, `modelo
 ('77', 'RE042', 'Pastillas freno delanteras', 'Frenos', 'Honda', 'CG 125', '125', '40000.00', '80', '8', '3', '2025-09-25 20:00:00'),
 ('78', 'RE043', 'Bujia NGK', 'Motor', 'Honda', 'Titan 150', '150', '25000.00', '131', '12', '3', '2025-09-25 20:00:00'),
 ('79', 'RE044', 'Cadena de transmision', 'Transmision', 'Honda', 'CB 200', '200', '75000.00', '53', '6', '3', '2025-09-25 20:00:00'),
-('80', 'RE045', 'Amortiguador trasero', 'Suspension', 'Honda', 'CG 125', '125', '140000.00', '60', '5', '3', '2025-09-25 20:00:00'),
+('80', 'RE045', 'Amortiguador trasero', 'Suspension', 'Honda', 'CG 125', '125', '140000.00', '61', '5', '3', '2025-09-25 20:00:00'),
 ('81', 'RE046', 'Espejos retrovisores', 'Accesorios', 'Honda', 'Titan 150', '150', '45000.00', '90', '9', '3', '2025-09-25 20:00:00'),
 ('82', 'RE047', 'Filtro de aceite', 'Motor', 'Honda', 'CB 200', '200', '30000.00', '110', '11', '3', '2025-09-25 20:00:00'),
 ('83', 'RE048', 'Placa de embrague', 'Transmision', 'Honda', 'CG 125', '125', '55000.00', '70', '7', '3', '2025-09-25 20:00:00'),
@@ -528,9 +599,15 @@ CREATE TABLE `recibos_dinero` (
   CONSTRAINT `recibos_dinero_ibfk_1` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE CASCADE,
   CONSTRAINT `recibos_dinero_ibfk_2` FOREIGN KEY (`venta_credito_id`) REFERENCES `ventas_credito` (`id`) ON DELETE SET NULL,
   CONSTRAINT `recibos_dinero_ibfk_3` FOREIGN KEY (`cuota_id`) REFERENCES `cuotas_credito` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4;
 
 -- Volcado de datos de la tabla `recibos_dinero`
+INSERT INTO `recibos_dinero` (`id`, `numero_recibo`, `cliente_id`, `venta_credito_id`, `cuota_id`, `monto`, `fecha_pago`, `forma_pago`, `concepto`, `observaciones`, `usuario_id`) VALUES
+('1', 'REC-2025-000001', '4', '3', '1', '39546.00', '2025-11-08 20:06:21', 'Efectivo', 'Pago de cuota #1 - Factura CREDITO-3', '', '1'),
+('2', 'REC-2025-000002', '4', '3', '2', '39546.00', '2025-11-08 20:08:10', 'Efectivo', 'Pago de cuota #2 - Factura CREDITO-3', '', '1'),
+('3', 'REC-2025-000003', '4', '3', '3', '39546.00', '2025-11-08 20:08:16', 'Efectivo', 'Pago de cuota #3 - Factura CREDITO-3', '', '1'),
+('4', 'REC-2025-000004', '4', '3', '4', '39544.00', '2025-11-08 20:08:26', 'Efectivo', 'Pago de cuota #4 - Factura CREDITO-3', '', '1');
+
 
 -- Estructura de tabla `sesiones`
 DROP TABLE IF EXISTS `sesiones`;
@@ -543,7 +620,7 @@ CREATE TABLE `sesiones` (
   PRIMARY KEY (`id`),
   KEY `usuario_id` (`usuario_id`),
   CONSTRAINT `sesiones_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8;
 
 -- Volcado de datos de la tabla `sesiones`
 INSERT INTO `sesiones` (`id`, `usuario_id`, `fecha_login`, `fecha_logout`, `ip_address`) VALUES
@@ -562,7 +639,8 @@ INSERT INTO `sesiones` (`id`, `usuario_id`, `fecha_login`, `fecha_logout`, `ip_a
 ('13', '1', '2025-11-07 14:04:55', '2025-11-07 14:19:07', '127.0.0.1'),
 ('14', '1', '2025-11-07 14:05:54', NULL, '127.0.0.1'),
 ('15', '1', '2025-11-07 14:09:03', '2025-11-07 14:09:59', '192.168.1.249'),
-('16', '1', '2025-11-08 19:25:01', NULL, '127.0.0.1');
+('16', '1', '2025-11-08 19:25:01', NULL, '127.0.0.1'),
+('17', '1', '2025-11-09 12:02:27', NULL, '127.0.0.1');
 
 
 -- Estructura de tabla `usuarios`
@@ -590,7 +668,7 @@ INSERT INTO `usuarios` (`id`, `usuario`, `password`, `nombre`, `rol`, `activo`, 
 DROP TABLE IF EXISTS `ventas_credito`;
 CREATE TABLE `ventas_credito` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `factura_id` int(11) NOT NULL,
+  `factura_id` int(11) DEFAULT NULL,
   `cliente_id` int(11) NOT NULL,
   `monto_total` decimal(15,2) NOT NULL,
   `numero_cuotas` int(11) NOT NULL,
@@ -604,6 +682,10 @@ CREATE TABLE `ventas_credito` (
   KEY `idx_estado` (`estado`),
   CONSTRAINT `ventas_credito_ibfk_1` FOREIGN KEY (`factura_id`) REFERENCES `cabecera_factura_ventas` (`id`) ON DELETE CASCADE,
   CONSTRAINT `ventas_credito_ibfk_2` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4;
 
 -- Volcado de datos de la tabla `ventas_credito`
+INSERT INTO `ventas_credito` (`id`, `factura_id`, `cliente_id`, `monto_total`, `numero_cuotas`, `monto_cuota`, `fecha_creacion`, `estado`, `fecha_finalizacion`) VALUES
+('2', NULL, '3', '158182.00', '2', '79091.00', '2025-11-08 19:52:37', 'Activa', NULL),
+('3', NULL, '4', '158182.00', '4', '39546.00', '2025-11-08 19:56:14', 'Activa', NULL);
+

@@ -85,35 +85,67 @@ if (isset($_POST['crear_backup'])) {
         
         // Registrar en auditoría
         include $base_path . 'includes/auditoria.php';
-        registrarAuditoria('crear', 'backup', 'Backup creado: ' . $nombre_archivo);
+        if (function_exists('registrarAuditoria')) {
+            registrarAuditoria('crear', 'backup', 'Backup creado: ' . $nombre_archivo);
+        }
         
         $mensaje = "Backup creado correctamente: " . $nombre_archivo;
+        
+        // Redirigir para evitar reenvío del formulario
+        header("Location: backup.php?mensaje=" . urlencode($mensaje));
+        exit();
     } catch (Exception $e) {
         $error = "Error al crear backup: " . $e->getMessage();
     }
 }
 
+// Si hay mensaje en GET (después de redirección)
+if (isset($_GET['mensaje'])) {
+    $mensaje = urldecode($_GET['mensaje']);
+}
+
 // Eliminar backup
-if (isset($_GET['eliminar']) && isset($_GET['archivo'])) {
+if (isset($_GET['eliminar']) && isset($_GET['archivo']) && $_GET['eliminar'] == '1') {
     $archivo = basename($_GET['archivo']);
-    $ruta_archivo = $backup_dir . $archivo;
     
-    if (file_exists($ruta_archivo) && strpos($archivo, 'backup_') === 0) {
-        unlink($ruta_archivo);
+    // Validar que el archivo tenga el formato correcto
+    if (preg_match('/^backup_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.sql$/', $archivo)) {
+        $ruta_archivo = $backup_dir . $archivo;
         
-        // Eliminar archivo de info si existe
-        $info_archivo = $backup_dir . 'info_' . str_replace(['backup_', '.sql'], '', $archivo) . '.json';
-        if (file_exists($info_archivo)) {
-            unlink($info_archivo);
+        if (file_exists($ruta_archivo) && is_file($ruta_archivo)) {
+            // Verificar que esté dentro del directorio de backups (prevenir directory traversal)
+            $ruta_real = realpath($ruta_archivo);
+            $backup_dir_real = realpath($backup_dir);
+            
+            if ($ruta_real && $backup_dir_real && strpos($ruta_real, $backup_dir_real) === 0) {
+                if (unlink($ruta_archivo)) {
+                    // Eliminar archivo de info si existe
+                    $info_archivo = $backup_dir . 'info_' . str_replace(['backup_', '.sql'], '', $archivo) . '.json';
+                    if (file_exists($info_archivo)) {
+                        unlink($info_archivo);
+                    }
+                    
+                    // Registrar en auditoría
+                    include $base_path . 'includes/auditoria.php';
+                    if (function_exists('registrarAuditoria')) {
+                        registrarAuditoria('eliminar', 'backup', 'Backup eliminado: ' . $archivo);
+                    }
+                    
+                    $mensaje = "Backup eliminado correctamente.";
+                    // Redirigir para evitar reenvío del formulario
+                    header("Location: backup.php?mensaje=" . urlencode($mensaje));
+                    exit();
+                } else {
+                    $error = "Error: No se pudo eliminar el archivo.";
+                }
+            } else {
+                $error = "Error: Ruta de archivo no válida.";
+            }
+        } else {
+            $error = "Error: El archivo no existe.";
         }
-        
-        // Registrar en auditoría
-        include $base_path . 'includes/auditoria.php';
-        registrarAuditoria('eliminar', 'backup', 'Backup eliminado: ' . $archivo);
-        
-        $mensaje = "Backup eliminado correctamente.";
     } else {
-        $error = "Error: Archivo no válido.";
+        $error = "Error: Nombre de archivo no válido.";
     }
 }
 
@@ -166,11 +198,11 @@ function formato_tamaño($bytes) {
 <div class="container tabla-responsive">
     <h1><i class="fas fa-database"></i> Backup y Respaldo</h1>
     
-    <?php if($mensaje != ""): ?>
+    <?php if(isset($mensaje) && $mensaje != ""): ?>
         <div class="mensaje exito"><?= htmlspecialchars($mensaje) ?></div>
     <?php endif; ?>
     
-    <?php if($error != ""): ?>
+    <?php if(isset($error) && $error != ""): ?>
         <div class="mensaje error"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
     

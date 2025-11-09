@@ -3,6 +3,7 @@ $base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/session.php';
 include $base_path . 'includes/auth.php';
+include $base_path . 'includes/auditoria.php';
 
 // Verificar permisos
 requerirPermiso('usuarios', 'editar');
@@ -44,26 +45,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $usuario_actual) {
         if ($stmt->fetch()) {
             $error = 'El usuario ya existe.';
         } else {
-            // Si se proporcionó una nueva contraseña, actualizarla
+            // Obtener la contraseña actual si no se proporciona una nueva
+            $password_hash = null;
             if (!empty($password)) {
+                // Si se proporcionó una nueva contraseña, actualizarla
                 $password_hash = password_hash($password, PASSWORD_DEFAULT);
+            } else {
+                // Si no se proporciona contraseña, obtener la actual de la base de datos
+                $stmt_password = $pdo->prepare("SELECT password FROM usuarios WHERE id = ?");
+                $stmt_password->execute(array($id));
+                $usuario_db = $stmt_password->fetch();
+                if ($usuario_db) {
+                    $password_hash = $usuario_db['password']; // Mantener la contraseña actual
+                }
+            }
+            
+            // Actualizar usuario (siempre incluir password_hash, ya sea nueva o actual)
+            if ($password_hash) {
                 $stmt = $pdo->prepare("UPDATE usuarios SET usuario = ?, password = ?, nombre = ?, rol = ?, activo = ? WHERE id = ?");
                 if ($stmt->execute(array($usuario, $password_hash, $nombre, $rol, $activo, $id))) {
-                    $mensaje = 'Usuario actualizado correctamente.';
-                    // Actualizar datos en memoria
-                    $usuario_actual['usuario'] = $usuario;
-                    $usuario_actual['nombre'] = $nombre;
-                    $usuario_actual['rol'] = $rol;
-                    $usuario_actual['activo'] = $activo;
-                } else {
-                    $error = 'Error al actualizar el usuario.';
-                }
-            } else {
-                // Sin cambio de contraseña
-                $stmt = $pdo->prepare("UPDATE usuarios SET usuario = ?, nombre = ?, rol = ?, activo = ? WHERE id = ?");
-                if ($stmt->execute(array($usuario, $nombre, $rol, $activo, $id))) {
                     // Registrar en auditoría
-                    registrarAuditoria('editar', 'usuarios', 'Usuario ' . $usuario . ' actualizado. Rol: ' . $rol . ', Activo: ' . ($activo ? 'Sí' : 'No'));
+                    if (function_exists('registrarAuditoria')) {
+                        $cambio_password = !empty($password) ? ' (contraseña cambiada)' : '';
+                        registrarAuditoria('editar', 'usuarios', 'Usuario ' . $usuario . ' actualizado. Rol: ' . $rol . ', Activo: ' . ($activo ? 'Sí' : 'No') . $cambio_password);
+                    }
                     
                     $mensaje = 'Usuario actualizado correctamente.';
                     // Actualizar datos en memoria
@@ -74,6 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $usuario_actual) {
                 } else {
                     $error = 'Error al actualizar el usuario.';
                 }
+            } else {
+                $error = 'Error: No se pudo obtener la contraseña del usuario.';
             }
         }
     }

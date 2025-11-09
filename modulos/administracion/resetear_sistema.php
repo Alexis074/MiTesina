@@ -78,19 +78,19 @@ include $base_path . 'includes/header.php';
     <?php endif; ?>
     
     <div class="form-container" style="max-width: 800px;">
-        <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin-bottom: 30px; border-radius: 5px;">
-            <h3 style="margin-top: 0; color: #92400e;"><i class="fas fa-info-circle"></i> Información Importante</h3>
-            <p style="margin-bottom: 10px; color: #78350f;">
-                <strong>El saldo en reportes se calcula:</strong>
+        <div style="background: #fee2e2; border-left: 4px solid #dc2626; padding: 20px; margin-bottom: 30px; border-radius: 5px;">
+            <h3 style="margin-top: 0; color: #991b1b;"><i class="fas fa-exclamation-triangle"></i> Advertencia Importante</h3>
+            <p style="margin-bottom: 10px; color: #7f1d1d;">
+                <strong>⚠️ Atención: Las acciones de reseteo son IRREVERSIBLES</strong>
             </p>
-            <ul style="color: #78350f; margin-left: 20px;">
-                <li>Basándose en el <strong>rango de fechas</strong> que selecciones</li>
-                <li>Sumando todas las <strong>ventas</strong> (ingresos) en ese rango</li>
-                <li>Restando todas las <strong>compras</strong> (egresos) en ese rango</li>
-                <li>El cálculo incluye todas las cajas cerradas en ese período</li>
+            <ul style="color: #7f1d1d; margin-left: 20px;">
+                <li>Si reseteas las <strong>cajas cerradas</strong>, perderás el historial de cajas pero mantendrás todas las ventas y compras.</li>
+                <li>Si reseteas las <strong>transacciones</strong>, perderás todas las ventas, compras y facturas, pero mantendrás clientes, productos y proveedores.</li>
+                <li>Si haces un <strong>reset completo</strong>, perderás TODOS los datos excepto los usuarios del sistema.</li>
+                <li><strong>RECOMENDACIÓN:</strong> Crea un backup antes de realizar cualquier reseteo.</li>
             </ul>
-            <p style="margin-top: 15px; color: #78350f; font-weight: bold;">
-                Para ver solo un período específico, ajusta las fechas en el filtro de reportes.
+            <p style="margin-top: 15px; color: #991b1b; font-weight: bold;">
+                ⚠️ Estas acciones NO se pueden deshacer. Asegúrate de tener un backup antes de continuar.
             </p>
         </div>
         
@@ -139,11 +139,11 @@ include $base_path . 'includes/header.php';
                 </p>
             </div>
             
-            <div class="form-actions-right" style="margin-top: 30px;">
-                <a href="reportes.php" class="btn-cancelar" style="text-decoration: none; margin-right: 10px;">
+            <div class="form-actions" style="margin-top: 30px; display: flex; gap: 10px; justify-content: flex-end; align-items: center;">
+                <a href="reportes.php" class="btn-cancelar" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 20px;">
                     <i class="fas fa-times"></i> Cancelar
                 </a>
-                <button type="submit" name="confirmar_reseteo" class="btn-submit" style="background: #dc2626;">
+                <button type="submit" name="confirmar_reseteo" class="btn-submit" style="background: #dc2626; height: 42px; padding: 0 20px; display: inline-flex; align-items: center; justify-content: center;">
                     <i class="fas fa-exclamation-triangle"></i> Confirmar Reseteo
                 </button>
             </div>
