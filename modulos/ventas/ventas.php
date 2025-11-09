@@ -537,13 +537,10 @@ if (isset($_GET['success']) && isset($_GET['factura_id'])) {
                     </select>
                 </div>
                 
-            </div>
-            
-            <div class="form-row-horizontal" style="margin-top: 15px;">
-                <div class="form-group-horizontal" style="flex: 1;">
+                <div class="form-group-horizontal">
                     <label>&nbsp;</label>
-                    <button type="button" id="btn_agregar_carrito" class="btn-agregar-carrito" style="width: 100%;">
-                        <i class="fas fa-cart-plus"></i> Agregar Producto al Carrito
+                    <button type="button" id="btn_agregar_carrito" class="btn-agregar-carrito">
+                        <i class="fas fa-cart-plus"></i> Agregar
                     </button>
                 </div>
             </div>
@@ -623,12 +620,10 @@ if (isset($_GET['success']) && isset($_GET['factura_id'])) {
                         <option value="6" selected>6 meses</option>
                     </select>
                 </div>
-            </div>
-            
-            <div class="form-row-horizontal" style="margin-top: 15px;">
-                <div class="form-group-horizontal" style="flex: 1;">
+                
+                <div class="form-group-horizontal">
                     <label>&nbsp;</label>
-                    <button type="submit" class="btn-confirmar-venta" style="width: 100%;">
+                    <button type="submit" class="btn-confirmar-venta">
                         <i class="fas fa-check"></i> Confirmar Venta
                     </button>
                 </div>
@@ -873,7 +868,7 @@ input[type="number"].form-input-horizontal::-webkit-inner-spin-button {
     color: white;
     border: none;
     border-radius: 6px;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
     cursor: pointer;
     transition: background 0.3s;
@@ -1122,18 +1117,6 @@ function actualizarCamposCredito() {
     } else {
         campoCuotas.style.display = 'none';
     }
-    
-    // Asegurar alineación correcta
-    setTimeout(function() {
-        var formGroups = document.querySelectorAll('.form-group-horizontal');
-        formGroups.forEach(function(group) {
-            if (group.style.display !== 'none') {
-                group.style.display = 'flex';
-                group.style.flexDirection = 'column';
-                group.style.justifyContent = 'flex-end';
-            }
-        });
-    }, 10);
 }
 
 document.getElementById('select_condicion').addEventListener('change', actualizarCamposCredito);

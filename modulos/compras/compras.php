@@ -549,6 +549,13 @@ if (isset($_GET['success']) && isset($_GET['compra_id'])) {
                         <option value="Transferencia">Transferencia</option>
                     </select>
                 </div>
+                
+                <div class="form-group-horizontal">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="btn-confirmar-venta">
+                        <i class="fas fa-check"></i> Confirmar Compra
+                    </button>
+                </div>
             </div>
             
             <div style="padding: 10px; background: #f0f9ff; border-radius: 5px; margin: 10px 0; font-size: 13px; color: #0369a1;">
@@ -560,15 +567,6 @@ if (isset($_GET['success']) && isset($_GET['compra_id'])) {
                 <i class="fas fa-wallet"></i> <strong>Saldo disponible en caja:</strong> <span id="saldo_disponible_texto"><?= number_format($saldo_disponible_caja, 0, ',', '.') ?> Gs</span>
             </div>
             <?php endif; ?>
-            
-            <div class="form-row-horizontal">
-                <div class="form-group-horizontal">
-                    <label>&nbsp;</label>
-                    <button type="submit" class="btn-confirmar-venta">
-                        <i class="fas fa-check"></i> Confirmar Compra
-                    </button>
-                </div>
-            </div>
         </form>
     </div>
 
@@ -842,10 +840,15 @@ input[type="number"].form-input-horizontal::-webkit-inner-spin-button {
     color: white;
     border: none;
     border-radius: 6px;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
     cursor: pointer;
     transition: background 0.3s;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
 .btn-confirmar-venta:hover {
