@@ -863,7 +863,7 @@ input[type="number"].form-input-horizontal::-webkit-inner-spin-button {
 
 .btn-confirmar-venta {
     width: 100%;
-    padding: 12px 20px;
+    padding: 10px;
     background: #2563eb;
     color: white;
     border: none;
@@ -873,10 +873,12 @@ input[type="number"].form-input-horizontal::-webkit-inner-spin-button {
     cursor: pointer;
     transition: background 0.3s;
     height: 42px;
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
+    margin: 0;
+    line-height: 1;
 }
 
 .btn-confirmar-venta:hover {
