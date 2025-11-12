@@ -1,6 +1,6 @@
 <?php
 date_default_timezone_set('America/Asuncion');
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/session.php';
 
@@ -13,42 +13,48 @@ if (estaLogueado()) {
 }
 
 // Procesar login
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $usuario = isset($_POST['usuario']) ? trim($_POST['usuario']) : '';
     $password = isset($_POST['password']) ? $_POST['password'] : '';
     
     if (empty($usuario) || empty($password)) {
         $error = 'Por favor, complete todos los campos.';
     } else {
-        $stmt = $pdo->prepare("SELECT id, usuario, password, nombre, rol, activo FROM usuarios WHERE usuario = ?");
-        $stmt->execute(array($usuario));
-        $user = $stmt->fetch();
-        
-        if ($user && $user['activo'] == 1) {
-            // Verificar contraseña (PHP 5.6 compatible)
-            if (password_verify($password, $user['password'])) {
-                // Iniciar sesión
-                $_SESSION['usuario_id'] = $user['id'];
-                $_SESSION['usuario'] = $user['usuario'];
-                $_SESSION['nombre'] = $user['nombre'];
-                $_SESSION['rol'] = $user['rol'];
-                
-                // Registrar sesión
-                $stmt_sesion = $pdo->prepare("INSERT INTO sesiones (usuario_id, ip_address) VALUES (?, ?)");
-                $stmt_sesion->execute(array($user['id'], $_SERVER['REMOTE_ADDR']));
-                $_SESSION['sesion_id'] = $pdo->lastInsertId();
-                
-                // Registrar en auditoría
-                include $base_path . 'includes/auditoria.php';
-                registrarAuditoria('login', 'sistema', 'Usuario ' . $user['usuario'] . ' inició sesión');
-                
-                header('Location: /repuestos/index.php');
-                exit();
+        try {
+            $stmt = $pdo->prepare("SELECT id, usuario, password, nombre, rol, activo FROM usuarios WHERE usuario = ?");
+            $stmt->execute([$usuario]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($user && isset($user['activo']) && $user['activo'] == 1) {
+                // Verificar contraseña
+                if (isset($user['password']) && password_verify($password, $user['password'])) {
+                    // Iniciar sesión
+                    $_SESSION['usuario_id'] = $user['id'] ?? null;
+                    $_SESSION['usuario'] = $user['usuario'] ?? '';
+                    $_SESSION['nombre'] = $user['nombre'] ?? '';
+                    $_SESSION['rol'] = $user['rol'] ?? '';
+                    
+                    // Registrar sesión
+                    $ip_address = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+                    $stmt_sesion = $pdo->prepare("INSERT INTO sesiones (usuario_id, ip_address) VALUES (?, ?)");
+                    $stmt_sesion->execute([$user['id'], $ip_address]);
+                    $_SESSION['sesion_id'] = $pdo->lastInsertId();
+                    
+                    // Registrar en auditoría
+                    include $base_path . 'includes/auditoria.php';
+                    registrarAuditoria('login', 'sistema', 'Usuario ' . ($user['usuario'] ?? '') . ' inició sesión');
+                    
+                    header('Location: /repuestos/index.php');
+                    exit();
+                } else {
+                    $error = 'Usuario o contraseña incorrectos.';
+                }
             } else {
                 $error = 'Usuario o contraseña incorrectos.';
             }
-        } else {
-            $error = 'Usuario o contraseña incorrectos.';
+        } catch (PDOException $e) {
+            $error = 'Error al procesar el login. Por favor, intente nuevamente.';
+            error_log('Error en login: ' . $e->getMessage());
         }
     }
 }

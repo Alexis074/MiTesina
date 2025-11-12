@@ -1,6 +1,6 @@
 <?php
 date_default_timezone_set('America/Asuncion');
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/session.php';
 include $base_path . 'includes/auth.php';
@@ -25,16 +25,16 @@ if ($id == $usuario_actual_id) {
 
 // Obtener datos del usuario antes de eliminar
 $stmt = $pdo->prepare("SELECT usuario, nombre FROM usuarios WHERE id = ?");
-$stmt->execute(array($id));
-$usuario = $stmt->fetch();
+$stmt->execute([$id]);
+$usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if ($usuario) {
+if ($usuario && isset($usuario['usuario'])) {
     // Registrar en auditoría antes de eliminar
     registrarAuditoria('eliminar', 'usuarios', 'Usuario ' . $usuario['usuario'] . ' (' . $usuario['nombre'] . ') eliminado');
     
     // Eliminar usuario
     $stmt = $pdo->prepare("DELETE FROM usuarios WHERE id = ?");
-    $stmt->execute(array($id));
+    $stmt->execute([$id]);
 }
 
 header('Location: usuarios.php');

@@ -1,6 +1,7 @@
 <?php
 date_default_timezone_set('America/Asuncion');
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
+$GLOBALS['base_path'] = $base_path;
 include $base_path . 'includes/conexion.php';
 require($base_path . 'fpdf/fpdf.php');
 

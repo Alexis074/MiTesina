@@ -1,6 +1,6 @@
 <?php    
 date_default_timezone_set('America/Asuncion');
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/header.php';
 
@@ -69,8 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Verificar que el número de factura no exista (seguridad adicional)
     // Esto no debería ocurrir, pero es una medida de seguridad
     $stmt_verificar = $pdo->prepare("SELECT id FROM cabecera_factura_ventas WHERE numero_factura = ?");
-    $stmt_verificar->execute(array($numero_factura));
-    if ($stmt_verificar->fetch()) {
+    $stmt_verificar->execute([$numero_factura]);
+    if ($stmt_verificar->fetch(PDO::FETCH_ASSOC)) {
         // Si por alguna razón el número ya existe, usar el siguiente ID
         $next_id++;
         $numero_factura = sprintf('%03d-%03d-%06d',$serie_1,$serie_2,$next_id);
@@ -105,8 +105,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Verificar que el timbrado no exista (seguridad adicional)
     $stmt_verificar_timbrado = $pdo->prepare("SELECT id FROM cabecera_factura_ventas WHERE timbrado = ?");
-    $stmt_verificar_timbrado->execute(array($next_timbrado));
-    if ($stmt_verificar_timbrado->fetch()) {
+    $stmt_verificar_timbrado->execute([$next_timbrado]);
+    if ($stmt_verificar_timbrado->fetch(PDO::FETCH_ASSOC)) {
         // Si por alguna razón el timbrado ya existe, usar el siguiente
         $next_timbrado++;
     }

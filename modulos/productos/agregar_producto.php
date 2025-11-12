@@ -1,8 +1,9 @@
 <?php
 date_default_timezone_set('America/Asuncion');
 $base_url = '/repuestos/';
-include $_SERVER['DOCUMENT_ROOT'] . $base_url . 'includes/header.php';
-include $_SERVER['DOCUMENT_ROOT'] . $base_url . 'includes/conexion.php'; // PDO
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
+include $base_path . 'includes/header.php';
+include $base_path . 'includes/conexion.php';
 
 $mensaje = "";
 
@@ -108,6 +109,6 @@ if (isset($_POST['guardar'])) {
     </form>
 </div>
 
-<?php include $_SERVER['DOCUMENT_ROOT'] . $base_url . 'includes/footer.php'; ?>
+<?php include $base_path . 'includes/footer.php'; ?>
 </body>
 </html>

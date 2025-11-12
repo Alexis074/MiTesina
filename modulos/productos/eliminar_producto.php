@@ -1,7 +1,8 @@
 <?php
 $base_url = '/repuestos/';
-include $_SERVER['DOCUMENT_ROOT'] . $base_url . 'includes/header.php';
-include $_SERVER['DOCUMENT_ROOT'] . $base_url . 'includes/conexion.php'; // ✅ tu conexión PDO
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
+include $base_path . 'includes/header.php';
+include $base_path . 'includes/conexion.php';
 
 $mensaje = "";
 

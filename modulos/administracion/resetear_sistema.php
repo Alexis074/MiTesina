@@ -1,12 +1,24 @@
 <?php
 date_default_timezone_set('America/Asuncion');
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/session.php';
 include $base_path . 'includes/auth.php';
 requerirLogin();
 requerirPermiso('usuarios', 'crear'); // Solo administradores pueden resetear
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Resetear Sistema - Repuestos Doble A</title>
+    <link rel="stylesheet" href="/repuestos/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+<?php include $base_path . 'includes/header.php'; ?>
 
+<?php
 $mensaje = "";
 $error = "";
 

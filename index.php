@@ -1,6 +1,6 @@
 <?php
 date_default_timezone_set('America/Asuncion');
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
 include $base_path . 'includes/session.php';
 include $base_path . 'includes/auth.php';
 requerirLogin();
@@ -41,7 +41,7 @@ requerirLogin();
 </head>
 <body>
 
-  <?php include 'includes/header.php'; ?>
+  <?php include $base_path . 'includes/header.php'; ?>
 
   <div class="container">
     <div class="welcome-text">

@@ -1,5 +1,5 @@
 <?php
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/session.php';
 include $base_path . 'includes/auth.php';
@@ -21,10 +21,10 @@ $id = $_GET['id'];
 
 // Obtener datos del usuario
 $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE id = ?");
-$stmt->execute(array($id));
-$usuario_actual = $stmt->fetch();
+$stmt->execute([$id]);
+$usuario_actual = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if (!$usuario_actual) {
+if (!$usuario_actual || !isset($usuario_actual['id'])) {
     $error = 'Usuario no encontrado.';
 }
 
@@ -41,8 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $usuario_actual) {
     } else {
         // Verificar si el usuario ya existe (excepto el actual)
         $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE usuario = ? AND id != ?");
-        $stmt->execute(array($usuario, $id));
-        if ($stmt->fetch()) {
+        $stmt->execute([$usuario, $id]);
+        if ($stmt->fetch(PDO::FETCH_ASSOC)) {
             $error = 'El usuario ya existe.';
         } else {
             // Obtener la contraseña actual si no se proporciona una nueva
@@ -53,9 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $usuario_actual) {
             } else {
                 // Si no se proporciona contraseña, obtener la actual de la base de datos
                 $stmt_password = $pdo->prepare("SELECT password FROM usuarios WHERE id = ?");
-                $stmt_password->execute(array($id));
-                $usuario_db = $stmt_password->fetch();
-                if ($usuario_db) {
+                $stmt_password->execute([$id]);
+                $usuario_db = $stmt_password->fetch(PDO::FETCH_ASSOC);
+                if ($usuario_db && isset($usuario_db['password'])) {
                     $password_hash = $usuario_db['password']; // Mantener la contraseña actual
                 }
             }
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $usuario_actual) {
             // Actualizar usuario (siempre incluir password_hash, ya sea nueva o actual)
             if ($password_hash) {
                 $stmt = $pdo->prepare("UPDATE usuarios SET usuario = ?, password = ?, nombre = ?, rol = ?, activo = ? WHERE id = ?");
-                if ($stmt->execute(array($usuario, $password_hash, $nombre, $rol, $activo, $id))) {
+                if ($stmt->execute([$usuario, $password_hash, $nombre, $rol, $activo, $id])) {
                     // Registrar en auditoría
                     if (function_exists('registrarAuditoria')) {
                         $cambio_password = !empty($password) ? ' (contraseña cambiada)' : '';
