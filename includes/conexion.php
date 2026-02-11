@@ -1,6 +1,6 @@
 <?php
 /**
- * Conexión a la base de datos usando PDO
+ * Conexión a la base de datos usando la PDO
  * Compatible con PHP 8.x y XAMPP
  */
 
