@@ -1,12 +1,11 @@
 <?php
 date_default_timezone_set('America/Asuncion');
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/session.php';
 include $base_path . 'includes/auth.php';
 requerirLogin();
 requerirPermiso('ventas', 'ver');
-include $base_path . 'includes/header.php';
 
 $venta_credito_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
@@ -64,6 +63,17 @@ try {
     $mensaje = "Error: " . $e->getMessage();
 }
 ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle de Crédito - Repuestos Doble A</title>
+    <link rel="stylesheet" href="/repuestos/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+
+<?php include $base_path . 'includes/header.php'; ?>
 
 <div class="container">
     <h1><i class="fas fa-file-invoice"></i> Detalle de Venta a Crédito</h1>

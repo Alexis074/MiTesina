@@ -1,7 +1,11 @@
 <?php
 $base_url = '/repuestos/';
-include $_SERVER['DOCUMENT_ROOT'] . $base_url . 'includes/header.php';
-include $_SERVER['DOCUMENT_ROOT'] . $base_url . 'includes/conexion.php'; // ✅ tu conexión PDO
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
+include $base_path . 'includes/conexion.php';
+include $base_path . 'includes/session.php';
+include $base_path . 'includes/auth.php';
+requerirLogin();
+requerirPermiso('productos', 'eliminar');
 
 $mensaje = "";
 
@@ -17,32 +21,26 @@ if (isset($_GET['id'])) {
     $mensaje = "ID no proporcionado.";
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Eliminar Producto - Repuestos Doble A</title>
-<link rel="stylesheet" href="<?= $base_url ?>style.css">
-<style>
-body { font-family: Arial, sans-serif; background: #f1f5f9; margin: 0; padding: 0; }
-.container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; text-align: center; }
-.message-box { width: 400px; background: white; padding: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-radius: 8px; }
-.message-box p { font-size: 16px; color: #1e293b; margin-bottom: 20px; }
-.message-box a { display: inline-block; padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px; transition: 0.3s; }
-.message-box a:hover { background: #1e40af; }
-h1 { margin-bottom: 20px; color: #1e293b; }
-</style>
+    <meta charset="UTF-8">
+    <title>Eliminar Producto - Repuestos Doble A</title>
+    <link rel="stylesheet" href="<?= $base_url ?>style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
 
-<div class="container">
+<?php include $base_path . 'includes/header.php'; ?>
+
+<div class="container form-container">
     <h1>Eliminar Producto</h1>
-    <div class="message-box">
+    <div class="mensaje <?= strpos($mensaje,'Error') !== false || strpos($mensaje,'no proporcionado') !== false ? 'error' : 'exito' ?>">
         <p><?= htmlspecialchars($mensaje); ?></p>
-        <a href="productos.php">Volver a Productos</a>
+    </div>
+    <div class="form-actions" style="margin-top: 20px;">
+        <a href="<?= $base_url ?>modulos/productos/productos.php" class="btn-submit"><i class="fas fa-arrow-left"></i> Volver a Productos</a>
     </div>
 </div>
 
-</body>
-</html>
+<?php include $base_path . 'includes/footer.php'; ?>

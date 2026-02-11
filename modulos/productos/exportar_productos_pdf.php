@@ -1,13 +1,16 @@
 <?php
-require('../../includes/conexion.php'); // Tu conexión PDO
-require('../../fpdf/fpdf.php'); // Ruta hacia tu carpeta fpdf
+date_default_timezone_set('America/Asuncion');
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
+$GLOBALS['base_path'] = $base_path;
+require($base_path . 'includes/conexion.php');
+require($base_path . 'fpdf/fpdf.php');
 
 // Subclase FPDF para manejar tablas con MultiCell
 class PDF extends FPDF
 {
     function Header()
     {
-        $this->Image('../../img/logo3.png', 10, 2, 25);
+        $this->Image($GLOBALS['base_path'] . 'img/logo3.png', 10, 2, 25);
         $this->SetFont('Arial', 'B', 16);
         $this->Cell(0, 10, utf8_decode('Listado de Productos - Repuestos Doble A'), 0, 1, 'C');
         $this->Ln(5);

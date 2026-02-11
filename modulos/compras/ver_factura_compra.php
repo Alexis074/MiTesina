@@ -1,8 +1,11 @@
 <?php
 date_default_timezone_set('America/Asuncion');
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
 include $base_path . 'includes/conexion.php';
-include $base_path . 'includes/header.php';
+include $base_path . 'includes/session.php';
+include $base_path . 'includes/auth.php';
+requerirLogin();
+requerirPermiso('compras', 'ver');
 
 // Compatibilidad para intdiv en PHP antiguo (PHP 5.6)
 if (!function_exists('intdiv_compat')) {
@@ -139,6 +142,8 @@ tfoot td { font-weight:bold; text-align:left; }
 </style>
 </head>
 <body>
+
+<?php include $base_path . 'includes/header.php'; ?>
 
 <div class="factura-container">
 

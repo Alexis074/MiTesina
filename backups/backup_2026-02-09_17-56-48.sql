@@ -1,5 +1,5 @@
 -- Backup de Base de Datos - Repuestos Doble A
--- Fecha: 2025-11-09 12:21:27
+-- Fecha: 2026-02-09 17:56:48
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -8,19 +8,19 @@ SET time_zone = "+00:00";
 -- Estructura de tabla `auditoria`
 DROP TABLE IF EXISTS `auditoria`;
 CREATE TABLE `auditoria` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `usuario_id` int(11) DEFAULT '0',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `usuario_id` bigint(20) DEFAULT 0,
   `nombre_usuario` varchar(150) NOT NULL,
   `accion` varchar(50) NOT NULL,
   `modulo` varchar(50) NOT NULL,
-  `detalle` text,
+  `detalle` longtext DEFAULT NULL,
   `fecha_hora` datetime NOT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_fecha` (`fecha_hora`),
   KEY `idx_modulo` (`modulo`),
   KEY `idx_accion` (`accion`)
-) ENGINE=InnoDB AUTO_INCREMENT=106 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=139 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `auditoria`
 INSERT INTO `auditoria` (`id`, `usuario_id`, `nombre_usuario`, `accion`, `modulo`, `detalle`, `fecha_hora`, `ip_address`) VALUES
@@ -100,22 +100,55 @@ INSERT INTO `auditoria` (`id`, `usuario_id`, `nombre_usuario`, `accion`, `modulo
 ('102', '1', 'Administrador (admin)', 'eliminar', 'backup', 'Backup eliminado: backup_2025-11-09_12-11-58.sql', '2025-11-09 12:12:14', '127.0.0.1'),
 ('103', '1', 'Administrador (admin)', 'eliminar', 'backup', 'Backup eliminado: backup_2025-11-09_12-11-48.sql', '2025-11-09 12:12:15', '127.0.0.1'),
 ('104', '1', 'Administrador (admin)', 'crear', 'backup', 'Backup creado: backup_2025-11-09_12-12-19.sql', '2025-11-09 12:12:19', '127.0.0.1'),
-('105', '1', 'Administrador (admin)', 'eliminar', 'backup', 'Backup eliminado: backup_2025-11-09_12-12-01.sql', '2025-11-09 12:12:29', '127.0.0.1');
+('105', '1', 'Administrador (admin)', 'eliminar', 'backup', 'Backup eliminado: backup_2025-11-09_12-12-01.sql', '2025-11-09 12:12:29', '127.0.0.1'),
+('106', '1', 'Administrador (admin)', 'crear', 'backup', 'Backup creado: backup_2025-11-09_12-21-27.sql', '2025-11-09 12:21:27', '127.0.0.1'),
+('107', '1', 'Administrador (admin)', 'crear', 'ventas', 'Factura #001-001-000077 creada. Cliente ID: 2, Total: 305.456', '2025-11-09 12:22:15', '127.0.0.1'),
+('108', '1', 'Administrador (admin)', 'crear', 'backup', 'Backup creado: backup_2025-11-09_12-34-18.sql', '2025-11-09 12:34:18', '127.0.0.1'),
+('109', '1', 'Administrador (admin)', 'anular', 'facturacion', 'Factura #001-001-000076 anulada. Motivo: error de tipeo', '2025-11-09 12:34:45', '127.0.0.1'),
+('110', '1', 'Administrador (admin)', 'logout', 'sistema', 'Usuario admin cerró sesión', '2025-11-09 12:34:58', '127.0.0.1'),
+('111', '2', 'Rafael Espinola (vendedor)', 'login', 'sistema', 'Usuario vendedor inició sesión', '2025-11-09 12:35:00', '127.0.0.1'),
+('112', '2', 'Rafael Espinola (vendedor)', 'crear', 'ventas', 'Factura #001-001-000078 creada. Cliente ID: 16, Total: 1.985.455', '2025-11-09 12:35:18', '127.0.0.1'),
+('113', '2', 'Rafael Espinola (vendedor)', 'logout', 'sistema', 'Usuario vendedor cerró sesión', '2025-11-09 12:35:26', '127.0.0.1'),
+('114', '1', 'Administrador (admin)', 'login', 'sistema', 'Usuario admin inició sesión', '2025-11-09 12:35:29', '127.0.0.1'),
+('115', '1', 'Administrador (admin)', 'cerrar', 'caja', 'Caja cerrada - Monto inicial: 1.000.000 Gs | Monto final: 5.171.822 Gs | Saldo: 4.171.822 Gs | Ingresos: 4.740.004 Gs | Egresos: 568.182 Gs (ID Caja: 14)', '2025-11-09 13:14:32', '127.0.0.1'),
+('116', '1', 'Administrador (admin)', 'logout', 'sistema', 'Usuario admin cerró sesión', '2025-11-09 13:14:34', '127.0.0.1'),
+('117', '1', 'Administrador (admin)', 'crear', 'backup', 'Backup creado: backup_2026-02-08_22-08-05.sql', '2026-02-08 22:08:05', '::1'),
+('118', '1', 'Administrador (admin)', 'login', 'sistema', 'Usuario admin inició sesión', '2026-02-08 22:24:52', '::1'),
+('119', '2', 'Rafael Espinola (vendedor)', 'login', 'sistema', 'Usuario vendedor inició sesión', '2026-02-08 22:28:29', '::1'),
+('120', '2', 'Rafael Espinola (vendedor)', 'logout', 'sistema', 'Usuario vendedor cerró sesión', '2026-02-08 22:28:36', '::1'),
+('121', '1', 'Administrador (admin)', 'login', 'sistema', 'Usuario admin inició sesión', '2026-02-08 22:28:44', '::1'),
+('122', '1', 'Administrador (admin)', 'login', 'sistema', 'Usuario admin inició sesión', '2026-02-08 22:29:41', '::1'),
+('123', '1', 'Administrador (admin)', 'eliminar', 'backup', 'Backup eliminado: backup_2025-11-09_12-12-19.sql', '2026-02-08 22:29:47', '::1'),
+('124', '1', 'Administrador (admin)', 'eliminar', 'backup', 'Backup eliminado: backup_2025-11-09_12-21-27.sql', '2026-02-08 22:29:50', '::1'),
+('125', '1', 'Administrador (admin)', 'eliminar', 'backup', 'Backup eliminado: backup_2025-11-09_12-34-18.sql', '2026-02-08 22:29:52', '::1'),
+('126', '1', 'Administrador (admin)', 'crear', 'backup', 'Backup creado: backup_2026-02-08_22-29-56.sql', '2026-02-08 22:29:56', '::1'),
+('127', '1', 'Administrador (admin)', 'login', 'sistema', 'Usuario admin inició sesión', '2026-02-09 15:53:59', '::1'),
+('128', '1', 'Administrador (admin)', 'abrir', 'caja', 'Caja abierta con monto inicial: 2.000.000 Gs (ID Caja: 15)', '2026-02-09 17:28:30', '::1'),
+('129', '1', 'Administrador (admin)', 'crear', 'compras', 'Compra #29 creada. Proveedor: Moto Cave Tuning Racing, Total: 1.309.091', '2026-02-09 17:28:55', '::1'),
+('130', '1', 'Administrador (admin)', 'crear', 'ventas', 'Factura #001-001-000079 creada. Cliente ID: 16, Total: 872.727', '2026-02-09 17:29:20', '::1'),
+('131', '1', 'Administrador (admin)', 'crear', 'ventas', 'Factura #001-001-000080 creada. Cliente ID: 2, Total: 4.363.636', '2026-02-09 17:31:02', '::1'),
+('132', '1', 'Administrador (admin)', 'cerrar', 'caja', 'Caja cerrada - Monto inicial: 2.000.000 Gs | Monto final: 8.545.453 Gs | Saldo: 6.545.453 Gs (ID Caja: 15)', '2026-02-09 17:32:53', '::1'),
+('133', '1', 'Administrador (admin)', 'abrir', 'caja', 'Caja abierta con monto inicial: 2.000.000 Gs (ID Caja: 16)', '2026-02-09 17:52:06', '::1'),
+('134', '1', 'Administrador (admin)', 'crear', 'ventas', 'Factura #001-001-000081 creada. Cliente ID: 7, Total: 3.927.273', '2026-02-09 17:52:18', '::1'),
+('135', '1', 'Administrador (admin)', 'crear', 'ventas', 'Factura #001-001-000082 creada. Cliente ID: 7, Total: 349.091', '2026-02-09 17:52:37', '::1'),
+('136', '1', 'Administrador (admin)', 'crear', 'compras', 'Compra #30 creada. Proveedor: Motorbike Store, Total: 7.330.909', '2026-02-09 17:53:15', '::1'),
+('137', '1', 'Administrador (admin)', 'crear', 'ventas', 'Factura #001-001-000083 creada. Cliente ID: 7, Total: 7.118.182', '2026-02-09 17:56:20', '::1'),
+('138', '1', 'Administrador (admin)', 'crear', 'compras', 'Compra #31 creada. Proveedor: Moto Premium, Total: 3.141.818', '2026-02-09 17:56:37', '::1');
 
 
 -- Estructura de tabla `cabecera_factura_compras`
 DROP TABLE IF EXISTS `cabecera_factura_compras`;
 CREATE TABLE `cabecera_factura_compras` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `numero_factura` varchar(50) NOT NULL,
-  `proveedor_id` int(11) NOT NULL,
+  `proveedor_id` bigint(20) NOT NULL,
   `fecha_hora` datetime NOT NULL,
   `monto_total` decimal(15,2) NOT NULL,
   `condicion_compra` varchar(20) DEFAULT 'Contado',
   `forma_pago` varchar(20) DEFAULT 'Efectivo',
   `timbrado` varchar(50) DEFAULT NULL,
   `numero_factura_proveedor` varchar(100) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `inicio_vigencia` date DEFAULT NULL,
   `fin_vigencia` date DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -123,7 +156,7 @@ CREATE TABLE `cabecera_factura_compras` (
   KEY `idx_fecha` (`fecha_hora`),
   KEY `idx_proveedor` (`proveedor_id`),
   CONSTRAINT `cabecera_factura_compras_ibfk_1` FOREIGN KEY (`proveedor_id`) REFERENCES `proveedores` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `cabecera_factura_compras`
 INSERT INTO `cabecera_factura_compras` (`id`, `numero_factura`, `proveedor_id`, `fecha_hora`, `monto_total`, `condicion_compra`, `forma_pago`, `timbrado`, `numero_factura_proveedor`, `created_at`, `inicio_vigencia`, `fin_vigencia`) VALUES
@@ -135,31 +168,34 @@ INSERT INTO `cabecera_factura_compras` (`id`, `numero_factura`, `proveedor_id`, 
 ('6', '001-001-000082', '2', '2025-11-07 15:02:46', '87273.00', 'Contado', 'Efectivo', '68011108', '', '2025-11-07 15:02:46', '2025-01-01', '2025-12-31'),
 ('7', '001-001-000016', '2', '2025-11-07 15:03:22', '499913.00', 'Contado', 'Efectivo', '56500183', '', '2025-11-07 15:03:22', '2025-01-01', '2025-12-31'),
 ('8', '001-001-000093', '9', '2025-11-08 19:49:38', '158182.00', 'Contado', 'Efectivo', '60708770', '', '2025-11-08 19:49:38', '2025-01-01', '2025-12-31'),
-('9', '001-001-000033', '2', '2025-11-09 12:07:52', '189394.00', 'Contado', 'Efectivo', '89960418', '', '2025-11-09 12:07:52', '2025-01-01', '2025-12-31');
+('9', '001-001-000033', '2', '2025-11-09 12:07:52', '189394.00', 'Contado', 'Efectivo', '89960418', '', '2025-11-09 12:07:52', '2025-01-01', '2025-12-31'),
+('10', '001-001-000038', '2', '2026-02-09 17:28:55', '1309091.00', 'Contado', 'Efectivo', '19243014', '', '2026-02-09 17:28:55', '2026-01-01', '2026-12-31'),
+('11', '001-001-000051', '7', '2026-02-09 17:53:15', '7330909.00', 'Contado', 'Efectivo', '85599056', '', '2026-02-09 17:53:15', '2026-01-01', '2026-12-31'),
+('12', '001-001-000060', '9', '2026-02-09 17:56:37', '3141818.00', 'Contado', 'Efectivo', '32568962', '', '2026-02-09 17:56:37', '2026-01-01', '2026-12-31');
 
 
 -- Estructura de tabla `cabecera_factura_ventas`
 DROP TABLE IF EXISTS `cabecera_factura_ventas`;
 CREATE TABLE `cabecera_factura_ventas` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `numero_factura` varchar(20) NOT NULL,
   `condicion_venta` enum('Contado','Crédito') NOT NULL,
   `forma_pago` enum('Efectivo','Tarjeta','Transferencia') NOT NULL,
-  `fecha_hora` datetime DEFAULT CURRENT_TIMESTAMP,
-  `cliente_id` int(11) NOT NULL,
+  `fecha_hora` datetime DEFAULT current_timestamp(),
+  `cliente_id` bigint(20) NOT NULL,
   `monto_total` decimal(15,2) NOT NULL,
   `timbrado` varchar(20) DEFAULT '',
   `inicio_vigencia` date DEFAULT NULL,
   `fin_vigencia` date DEFAULT NULL,
-  `anulada` tinyint(1) DEFAULT '0',
+  `anulada` tinyint(1) DEFAULT 0,
   `fecha_anulacion` datetime DEFAULT NULL,
-  `usuario_anulacion_id` int(11) DEFAULT NULL,
-  `motivo_anulacion` text,
+  `usuario_anulacion_id` bigint(20) DEFAULT NULL,
+  `motivo_anulacion` longtext DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_numero_factura_unique` (`numero_factura`),
   UNIQUE KEY `idx_timbrado_unique` (`timbrado`),
   KEY `cliente_id` (`cliente_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=77 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=84 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `cabecera_factura_ventas`
 INSERT INTO `cabecera_factura_ventas` (`id`, `numero_factura`, `condicion_venta`, `forma_pago`, `fecha_hora`, `cliente_id`, `monto_total`, `timbrado`, `inicio_vigencia`, `fin_vigencia`, `anulada`, `fecha_anulacion`, `usuario_anulacion_id`, `motivo_anulacion`) VALUES
@@ -179,20 +215,27 @@ INSERT INTO `cabecera_factura_ventas` (`id`, `numero_factura`, `condicion_venta`
 ('73', '001-001-000073', 'Contado', 'Efectivo', '2025-11-07 15:05:24', '5', '1418182.00', '4571588', '2025-01-01', '2025-12-31', '0', NULL, NULL, NULL),
 ('74', '001-001-000074', 'Crédito', 'Tarjeta', '2025-11-08 19:35:21', '5', '240000.00', '4571589', '2025-01-01', '2025-12-31', '0', NULL, NULL, NULL),
 ('75', '001-001-000075', 'Crédito', 'Efectivo', '2025-11-08 20:08:26', '4', '158182.00', '4571590', '2025-01-01', '2025-12-31', '0', NULL, NULL, NULL),
-('76', '001-001-000076', 'Contado', 'Efectivo', '2025-11-09 12:07:27', '2', '158182.00', '4571591', '2025-01-01', '2025-12-31', '0', NULL, NULL, NULL);
+('76', '001-001-000076', 'Contado', 'Efectivo', '2025-11-09 12:07:27', '2', '158182.00', '4571591', '2025-01-01', '2025-12-31', '1', '2025-11-09 12:34:45', '1', 'error de tipeo'),
+('77', '001-001-000077', 'Contado', 'Efectivo', '2025-11-09 12:22:15', '2', '305456.00', '4571592', '2025-01-01', '2025-12-31', '0', NULL, NULL, NULL),
+('78', '001-001-000078', 'Contado', 'Efectivo', '2025-11-09 12:35:18', '16', '1985455.00', '4571593', '2025-01-01', '2025-12-31', '0', NULL, NULL, NULL),
+('79', '001-001-000079', 'Contado', 'Efectivo', '2026-02-09 17:29:20', '16', '872727.00', '4571594', '2026-01-01', '2026-12-31', '0', NULL, NULL, NULL),
+('80', '001-001-000080', 'Contado', 'Efectivo', '2026-02-09 17:31:02', '2', '4363636.00', '4571595', '2026-01-01', '2026-12-31', '0', NULL, NULL, NULL),
+('81', '001-001-000081', 'Contado', 'Efectivo', '2026-02-09 17:52:17', '7', '3927273.00', '4571596', '2026-01-01', '2026-12-31', '0', NULL, NULL, NULL),
+('82', '001-001-000082', 'Contado', 'Efectivo', '2026-02-09 17:52:37', '7', '349091.00', '4571597', '2026-01-01', '2026-12-31', '0', NULL, NULL, NULL),
+('83', '001-001-000083', 'Contado', 'Efectivo', '2026-02-09 17:56:20', '7', '7118182.00', '4571598', '2026-01-01', '2026-12-31', '0', NULL, NULL, NULL);
 
 
 -- Estructura de tabla `caja`
 DROP TABLE IF EXISTS `caja`;
 CREATE TABLE `caja` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `fecha` date NOT NULL,
   `monto_inicial` decimal(12,2) NOT NULL,
   `monto_final` decimal(12,2) DEFAULT NULL,
   `estado` enum('Abierta','Cerrada') NOT NULL DEFAULT 'Abierta',
   `created_at` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `caja`
 INSERT INTO `caja` (`id`, `fecha`, `monto_inicial`, `monto_final`, `estado`, `created_at`) VALUES
@@ -200,22 +243,24 @@ INSERT INTO `caja` (`id`, `fecha`, `monto_inicial`, `monto_final`, `estado`, `cr
 ('11', '2025-11-04', '4.00', '132004.00', 'Cerrada', '2025-11-04 22:48:07'),
 ('12', '2025-11-04', '2000000.00', '3183974.00', 'Cerrada', '2025-11-04 22:58:12'),
 ('13', '2025-11-08', '5000000.00', '5081818.00', 'Cerrada', '2025-11-08 19:34:16'),
-('14', '2025-11-09', '1000000.00', NULL, 'Abierta', '2025-11-09 12:06:44');
+('14', '2025-11-09', '1000000.00', '5171822.00', 'Cerrada', '2025-11-09 12:06:44'),
+('15', '2026-02-09', '2000000.00', '8545453.00', 'Cerrada', '2026-02-09 17:28:30'),
+('16', '2026-02-09', '2000000.00', NULL, 'Abierta', '2026-02-09 17:52:06');
 
 
 -- Estructura de tabla `caja_movimientos`
 DROP TABLE IF EXISTS `caja_movimientos`;
 CREATE TABLE `caja_movimientos` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `caja_id` int(11) NOT NULL,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `caja_id` bigint(20) NOT NULL,
   `fecha` datetime NOT NULL,
   `tipo` enum('Ingreso','Egreso') NOT NULL,
   `concepto` varchar(255) NOT NULL,
   `monto` decimal(12,2) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `caja_id` (`caja_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `caja_movimientos`
 INSERT INTO `caja_movimientos` (`id`, `caja_id`, `fecha`, `tipo`, `concepto`, `monto`, `created_at`) VALUES
@@ -232,22 +277,32 @@ INSERT INTO `caja_movimientos` (`id`, `caja_id`, `fecha`, `tipo`, `concepto`, `m
 ('35', '13', '2025-11-08 20:08:16', 'Ingreso', 'Pago cuota #3 - Cliente: Ana Martinez', '39546.00', '2025-11-08 20:08:16'),
 ('36', '13', '2025-11-08 20:08:26', 'Ingreso', 'Pago cuota #4 - Cliente: Ana Martinez', '39544.00', '2025-11-08 20:08:26'),
 ('37', '14', '2025-11-09 12:07:27', 'Ingreso', 'Venta - Factura #001-001-000076 - Cliente ID: 2', '158182.00', '2025-11-09 12:07:27'),
-('38', '14', '2025-11-09 12:07:52', 'Egreso', 'Compra a proveedor ID 2, compra ID 28', '189394.00', '2025-11-09 12:07:52');
+('38', '14', '2025-11-09 12:07:52', 'Egreso', 'Compra a proveedor ID 2, compra ID 28', '189394.00', '2025-11-09 12:07:52'),
+('39', '14', '2025-11-09 12:22:15', 'Ingreso', 'Venta - Factura #001-001-000077 - Cliente ID: 2', '305456.00', '2025-11-09 12:22:15'),
+('40', '14', '2025-11-09 12:35:18', 'Ingreso', 'Venta - Factura #001-001-000078 - Cliente ID: 16', '1985455.00', '2025-11-09 12:35:18'),
+('41', '15', '2026-02-09 17:28:55', 'Egreso', 'Compra a proveedor ID 2, compra ID 29', '1309091.00', '2026-02-09 17:28:55'),
+('42', '15', '2026-02-09 17:29:20', 'Ingreso', 'Venta - Factura #001-001-000079 - Cliente ID: 16', '872727.00', '2026-02-09 17:29:20'),
+('43', '15', '2026-02-09 17:31:02', 'Ingreso', 'Venta - Factura #001-001-000080 - Cliente ID: 2', '4363636.00', '2026-02-09 17:31:02'),
+('44', '16', '2026-02-09 17:52:18', 'Ingreso', 'Venta - Factura #001-001-000081 - Cliente ID: 7', '3927273.00', '2026-02-09 17:52:18'),
+('45', '16', '2026-02-09 17:52:37', 'Ingreso', 'Venta - Factura #001-001-000082 - Cliente ID: 7', '349091.00', '2026-02-09 17:52:37'),
+('46', '16', '2026-02-09 17:53:15', 'Egreso', 'Compra a proveedor ID 7, compra ID 30', '7330909.00', '2026-02-09 17:53:15'),
+('47', '16', '2026-02-09 17:56:20', 'Ingreso', 'Venta - Factura #001-001-000083 - Cliente ID: 7', '7118182.00', '2026-02-09 17:56:20'),
+('48', '16', '2026-02-09 17:56:37', 'Egreso', 'Compra a proveedor ID 9, compra ID 31', '3141818.00', '2026-02-09 17:56:37');
 
 
 -- Estructura de tabla `clientes`
 DROP TABLE IF EXISTS `clientes`;
 CREATE TABLE `clientes` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(100) NOT NULL,
   `apellido` varchar(100) DEFAULT NULL,
   `ruc` varchar(20) DEFAULT NULL,
   `telefono` varchar(50) DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
   `direccion` varchar(255) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `clientes`
 INSERT INTO `clientes` (`id`, `nombre`, `apellido`, `ruc`, `telefono`, `email`, `direccion`, `created_at`) VALUES
@@ -263,15 +318,15 @@ INSERT INTO `clientes` (`id`, `nombre`, `apellido`, `ruc`, `telefono`, `email`, 
 -- Estructura de tabla `compras`
 DROP TABLE IF EXISTS `compras`;
 CREATE TABLE `compras` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `proveedor_id` int(11) NOT NULL,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `proveedor_id` bigint(20) NOT NULL,
   `fecha` datetime NOT NULL,
   `total` decimal(12,2) NOT NULL,
   `estado` enum('Pendiente','Completada') NOT NULL DEFAULT 'Pendiente',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `proveedor_id` (`proveedor_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `compras`
 INSERT INTO `compras` (`id`, `proveedor_id`, `fecha`, `total`, `estado`, `created_at`) VALUES
@@ -283,27 +338,30 @@ INSERT INTO `compras` (`id`, `proveedor_id`, `fecha`, `total`, `estado`, `create
 ('25', '2', '2025-11-07 15:02:46', '87273.00', 'Pendiente', '2025-11-07 15:02:46'),
 ('26', '2', '2025-11-07 15:03:22', '499913.00', 'Pendiente', '2025-11-07 15:03:22'),
 ('27', '9', '2025-11-08 19:49:38', '158182.00', 'Pendiente', '2025-11-08 19:49:38'),
-('28', '2', '2025-11-09 12:07:52', '189394.00', 'Pendiente', '2025-11-09 12:07:52');
+('28', '2', '2025-11-09 12:07:52', '189394.00', 'Pendiente', '2025-11-09 12:07:52'),
+('29', '2', '2026-02-09 17:28:55', '1309091.00', 'Pendiente', '2026-02-09 17:28:55'),
+('30', '7', '2026-02-09 17:53:15', '7330909.00', 'Pendiente', '2026-02-09 17:53:15'),
+('31', '9', '2026-02-09 17:56:37', '3141818.00', 'Pendiente', '2026-02-09 17:56:37');
 
 
 -- Estructura de tabla `cuotas_credito`
 DROP TABLE IF EXISTS `cuotas_credito`;
 CREATE TABLE `cuotas_credito` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `venta_credito_id` int(11) NOT NULL,
-  `numero_cuota` int(11) NOT NULL,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `venta_credito_id` bigint(20) NOT NULL,
+  `numero_cuota` bigint(20) NOT NULL,
   `monto` decimal(15,2) NOT NULL,
   `fecha_vencimiento` date NOT NULL,
   `fecha_pago` datetime DEFAULT NULL,
-  `monto_pagado` decimal(15,2) DEFAULT '0.00',
+  `monto_pagado` decimal(15,2) DEFAULT 0.00,
   `estado` enum('Pendiente','Pagada','Vencida','Cancelada') DEFAULT 'Pendiente',
-  `observaciones` text,
+  `observaciones` longtext DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_venta_credito` (`venta_credito_id`),
   KEY `idx_estado` (`estado`),
   KEY `idx_fecha_vencimiento` (`fecha_vencimiento`),
   CONSTRAINT `cuotas_credito_ibfk_1` FOREIGN KEY (`venta_credito_id`) REFERENCES `ventas_credito` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `cuotas_credito`
 INSERT INTO `cuotas_credito` (`id`, `venta_credito_id`, `numero_cuota`, `monto`, `fecha_vencimiento`, `fecha_pago`, `monto_pagado`, `estado`, `observaciones`) VALUES
@@ -316,21 +374,21 @@ INSERT INTO `cuotas_credito` (`id`, `venta_credito_id`, `numero_cuota`, `monto`,
 -- Estructura de tabla `detalle_factura_compras`
 DROP TABLE IF EXISTS `detalle_factura_compras`;
 CREATE TABLE `detalle_factura_compras` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `factura_id` int(11) NOT NULL,
-  `producto_id` int(11) NOT NULL,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `factura_id` bigint(20) NOT NULL,
+  `producto_id` bigint(20) NOT NULL,
   `cantidad` decimal(10,2) NOT NULL,
   `precio_unitario` decimal(10,2) NOT NULL,
   `subtotal` decimal(15,2) NOT NULL,
-  `valor_compra_10` decimal(15,2) NOT NULL DEFAULT '0.00' COMMENT 'Valor con IVA 10%',
-  `valor_compra_exenta` decimal(15,2) NOT NULL DEFAULT '0.00' COMMENT 'Valor exento de IVA',
-  `valor_compra_5` decimal(15,2) DEFAULT '0.00' COMMENT 'Valor con IVA 5%',
+  `valor_compra_10` decimal(15,2) NOT NULL DEFAULT 0.00 COMMENT 'Valor con IVA 10%',
+  `valor_compra_exenta` decimal(15,2) NOT NULL DEFAULT 0.00 COMMENT 'Valor exento de IVA',
+  `valor_compra_5` decimal(15,2) DEFAULT 0.00 COMMENT 'Valor con IVA 5%',
   PRIMARY KEY (`id`),
   KEY `idx_factura` (`factura_id`),
   KEY `idx_producto` (`producto_id`),
   CONSTRAINT `detalle_factura_compras_ibfk_1` FOREIGN KEY (`factura_id`) REFERENCES `cabecera_factura_compras` (`id`) ON DELETE CASCADE,
   CONSTRAINT `detalle_factura_compras_ibfk_2` FOREIGN KEY (`producto_id`) REFERENCES `productos` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `detalle_factura_compras`
 INSERT INTO `detalle_factura_compras` (`id`, `factura_id`, `producto_id`, `cantidad`, `precio_unitario`, `subtotal`, `valor_compra_10`, `valor_compra_exenta`, `valor_compra_5`) VALUES
@@ -348,25 +406,28 @@ INSERT INTO `detalle_factura_compras` (`id`, `factura_id`, `producto_id`, `canti
 ('12', '7', '86', '1.00', '150000.00', '163636.00', '13636.00', '0.00', '0.00'),
 ('13', '8', '49', '1.00', '145000.00', '158182.00', '13182.00', '0.00', '0.00'),
 ('14', '9', '80', '1.00', '140000.00', '152727.00', '12727.00', '0.00', '0.00'),
-('15', '9', '61', '1.00', '35000.00', '36667.00', '0.00', '0.00', '1667.00');
+('15', '9', '61', '1.00', '35000.00', '36667.00', '0.00', '0.00', '1667.00'),
+('16', '10', '36', '15.00', '80000.00', '1309091.00', '109091.00', '0.00', '0.00'),
+('17', '11', '65', '56.00', '120000.00', '7330909.00', '610909.00', '0.00', '0.00'),
+('18', '12', '36', '36.00', '80000.00', '3141818.00', '261818.00', '0.00', '0.00');
 
 
 -- Estructura de tabla `detalle_factura_ventas`
 DROP TABLE IF EXISTS `detalle_factura_ventas`;
 CREATE TABLE `detalle_factura_ventas` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `factura_id` int(11) NOT NULL,
-  `producto_id` int(11) NOT NULL,
-  `cantidad` int(11) NOT NULL,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `factura_id` bigint(20) NOT NULL,
+  `producto_id` bigint(20) NOT NULL,
+  `cantidad` bigint(20) NOT NULL,
   `precio_unitario` decimal(15,2) NOT NULL,
-  `valor_venta_5` decimal(15,2) DEFAULT '0.00',
-  `valor_venta_10` decimal(15,2) DEFAULT '0.00',
-  `valor_venta_exenta` decimal(15,2) DEFAULT '0.00',
+  `valor_venta_5` decimal(15,2) DEFAULT 0.00,
+  `valor_venta_10` decimal(15,2) DEFAULT 0.00,
+  `valor_venta_exenta` decimal(15,2) DEFAULT 0.00,
   `total_parcial` decimal(15,2) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `factura_id` (`factura_id`),
   KEY `producto_id` (`producto_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=118 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=126 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `detalle_factura_ventas`
 INSERT INTO `detalle_factura_ventas` (`id`, `factura_id`, `producto_id`, `cantidad`, `precio_unitario`, `valor_venta_5`, `valor_venta_10`, `valor_venta_exenta`, `total_parcial`) VALUES
@@ -394,25 +455,33 @@ INSERT INTO `detalle_factura_ventas` (`id`, `factura_id`, `producto_id`, `cantid
 ('114', '73', '44', '20', '65000.00', '0.00', '118182.00', '0.00', '1418182.00'),
 ('115', '74', '46', '1', '220000.00', '0.00', '20000.00', '0.00', '240000.00'),
 ('116', '75', '49', '1', '145000.00', '0.00', '13182.00', '0.00', '158182.00'),
-('117', '76', '49', '1', '145000.00', '0.00', '13182.00', '0.00', '158182.00');
+('117', '76', '49', '1', '145000.00', '0.00', '13182.00', '0.00', '158182.00'),
+('118', '77', '48', '1', '140000.00', '0.00', '12728.00', '0.00', '152728.00'),
+('119', '77', '48', '1', '140000.00', '0.00', '12728.00', '0.00', '152728.00'),
+('120', '78', '48', '13', '140000.00', '0.00', '165455.00', '0.00', '1985455.00'),
+('121', '79', '36', '10', '80000.00', '0.00', '72727.00', '0.00', '872727.00'),
+('122', '80', '36', '50', '80000.00', '0.00', '363636.00', '0.00', '4363636.00'),
+('123', '81', '36', '45', '80000.00', '0.00', '327273.00', '0.00', '3927273.00'),
+('124', '82', '36', '4', '80000.00', '0.00', '29091.00', '0.00', '349091.00'),
+('125', '83', '49', '45', '145000.00', '0.00', '593182.00', '0.00', '7118182.00');
 
 
 -- Estructura de tabla `detalle_ventas_credito`
 DROP TABLE IF EXISTS `detalle_ventas_credito`;
 CREATE TABLE `detalle_ventas_credito` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `venta_credito_id` int(11) NOT NULL,
-  `producto_id` int(11) NOT NULL,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `venta_credito_id` bigint(20) NOT NULL,
+  `producto_id` bigint(20) NOT NULL,
   `cantidad` decimal(10,2) NOT NULL,
   `precio_unitario` decimal(15,2) NOT NULL,
-  `valor_venta_5` decimal(15,2) DEFAULT '0.00',
-  `valor_venta_10` decimal(15,2) DEFAULT '0.00',
-  `valor_venta_exenta` decimal(15,2) DEFAULT '0.00',
+  `valor_venta_5` decimal(15,2) DEFAULT 0.00,
+  `valor_venta_10` decimal(15,2) DEFAULT 0.00,
+  `valor_venta_exenta` decimal(15,2) DEFAULT 0.00,
   `total_parcial` decimal(15,2) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `venta_credito_id` (`venta_credito_id`),
   KEY `producto_id` (`producto_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `detalle_ventas_credito`
 INSERT INTO `detalle_ventas_credito` (`id`, `venta_credito_id`, `producto_id`, `cantidad`, `precio_unitario`, `valor_venta_5`, `valor_venta_10`, `valor_venta_exenta`, `total_parcial`) VALUES
@@ -422,16 +491,16 @@ INSERT INTO `detalle_ventas_credito` (`id`, `venta_credito_id`, `producto_id`, `
 -- Estructura de tabla `pagares`
 DROP TABLE IF EXISTS `pagares`;
 CREATE TABLE `pagares` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `venta_credito_id` int(11) NOT NULL,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `venta_credito_id` bigint(20) NOT NULL,
   `numero_pagare` varchar(50) NOT NULL,
-  `cliente_id` int(11) NOT NULL,
+  `cliente_id` bigint(20) NOT NULL,
   `monto_total` decimal(15,2) NOT NULL,
   `fecha_emision` date NOT NULL,
   `fecha_vencimiento` date NOT NULL,
   `lugar_pago` varchar(255) DEFAULT 'San Ignacio, Paraguay',
   `estado` enum('Vigente','Cancelado','Vencido') DEFAULT 'Vigente',
-  `observaciones` text,
+  `observaciones` longtext DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `numero_pagare` (`numero_pagare`),
   KEY `idx_venta_credito` (`venta_credito_id`),
@@ -439,23 +508,23 @@ CREATE TABLE `pagares` (
   KEY `idx_estado` (`estado`),
   CONSTRAINT `pagares_ibfk_1` FOREIGN KEY (`venta_credito_id`) REFERENCES `ventas_credito` (`id`) ON DELETE CASCADE,
   CONSTRAINT `pagares_ibfk_2` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `pagares`
 
 -- Estructura de tabla `permisos`
 DROP TABLE IF EXISTS `permisos`;
 CREATE TABLE `permisos` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `rol` varchar(50) NOT NULL,
   `modulo` varchar(50) NOT NULL,
-  `puede_ver` tinyint(1) DEFAULT '0',
-  `puede_crear` tinyint(1) DEFAULT '0',
-  `puede_editar` tinyint(1) DEFAULT '0',
-  `puede_eliminar` tinyint(1) DEFAULT '0',
+  `puede_ver` tinyint(1) DEFAULT 0,
+  `puede_crear` tinyint(1) DEFAULT 0,
+  `puede_editar` tinyint(1) DEFAULT 0,
+  `puede_eliminar` tinyint(1) DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_rol_modulo` (`rol`,`modulo`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `permisos`
 INSERT INTO `permisos` (`id`, `rol`, `modulo`, `puede_ver`, `puede_crear`, `puede_editar`, `puede_eliminar`) VALUES
@@ -480,26 +549,26 @@ INSERT INTO `permisos` (`id`, `rol`, `modulo`, `puede_ver`, `puede_crear`, `pued
 -- Estructura de tabla `productos`
 DROP TABLE IF EXISTS `productos`;
 CREATE TABLE `productos` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `codigo` varchar(50) DEFAULT NULL,
   `nombre` varchar(150) NOT NULL,
   `categoria` varchar(100) DEFAULT NULL,
   `marca` varchar(50) DEFAULT NULL,
   `modelo` varchar(50) DEFAULT NULL,
   `cilindrada` varchar(10) DEFAULT NULL,
-  `precio` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `stock` int(11) NOT NULL DEFAULT '0',
-  `stock_min` int(11) NOT NULL DEFAULT '0',
-  `proveedor_id` int(11) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `precio` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `stock` bigint(20) NOT NULL DEFAULT 0,
+  `stock_min` bigint(20) NOT NULL DEFAULT 0,
+  `proveedor_id` bigint(20) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `proveedor_id` (`proveedor_id`),
   CONSTRAINT `productos_ibfk_1` FOREIGN KEY (`proveedor_id`) REFERENCES `proveedores` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=87 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=87 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `productos`
 INSERT INTO `productos` (`id`, `codigo`, `nombre`, `categoria`, `marca`, `modelo`, `cilindrada`, `precio`, `stock`, `stock_min`, `proveedor_id`, `created_at`) VALUES
-('36', 'RE001', 'Aceite motor 10w40', 'Motor', 'Honda', 'CG 125', '125', '80000.00', '95', '10', '1', '2025-09-25 20:00:00'),
+('36', 'RE001', 'Aceite motor 10w40', 'Motor', 'Honda', 'CG 125', '125', '80000.00', '37', '10', '1', '2025-09-25 20:00:00'),
 ('37', 'RE002', 'Filtro aire', 'Motor', 'Honda', 'Titan 150', '150', '25000.00', '150', '15', '1', '2025-09-25 20:00:00'),
 ('38', 'RE003', 'Filtro aceite', 'Motor', 'Honda', 'CB 200', '200', '30000.00', '153', '12', '2', '2025-09-25 20:00:00'),
 ('39', 'RE004', 'Pastilla freno delantera', 'Frenos', 'Leopard', 'LE 150', '150', '40000.00', '80', '8', '2', '2025-09-25 20:00:00'),
@@ -511,8 +580,8 @@ INSERT INTO `productos` (`id`, `codigo`, `nombre`, `categoria`, `marca`, `modelo
 ('45', 'RE010', 'Kit transmision Riffel', 'Transmision', 'Honda', 'CB1 125', '125', '120000.00', '80', '8', '3', '2025-09-25 20:00:00'),
 ('46', 'RE011', 'Bateria 12v', 'Electrico', 'Taiga', 'TG 125', '125', '220000.00', '23', '4', '4', '2025-09-25 20:00:00'),
 ('47', 'RE012', 'Bujia', 'Motor', 'Honda', 'CG 125', '125', '25000.00', '61', '12', '1', '2025-09-25 20:00:00'),
-('48', 'RE013', 'Amortiguador trasero', 'Suspension', 'Leopard', 'LE 150', '150', '140000.00', '44', '5', '2', '2025-09-25 20:00:00'),
-('49', 'RE014', 'Amortiguador delantero', 'Suspension', 'Kenton', 'KT 200', '200', '145000.00', '55', '5', '3', '2025-09-25 20:00:00'),
+('48', 'RE013', 'Amortiguador trasero', 'Suspension', 'Leopard', 'LE 150', '150', '140000.00', '29', '5', '2', '2025-09-25 20:00:00'),
+('49', 'RE014', 'Amortiguador delantero', 'Suspension', 'Kenton', 'KT 200', '200', '145000.00', '11', '5', '3', '2025-09-25 20:00:00'),
 ('50', 'RE015', 'Neumatico delantero 2.75-18', 'Llantas', 'Honda', 'CB 200', '200', '95000.00', '40', '4', '1', '2025-09-25 20:00:00'),
 ('51', 'RE016', 'Neumatico trasero 3.00-18', 'Llantas', 'Honda', 'CG 125', '125', '105000.00', '40', '4', '1', '2025-09-25 20:00:00'),
 ('52', 'RE017', 'Espejo retrovisor', 'Accesorios', 'Kenton', 'KT 200', '200', '45000.00', '90', '9', '2', '2025-09-25 20:00:00'),
@@ -528,7 +597,7 @@ INSERT INTO `productos` (`id`, `codigo`, `nombre`, `categoria`, `marca`, `modelo
 ('62', 'RE027', 'Claxon', 'Electrico', 'Honda', 'Titan 150', '150', '35000.00', '29', '9', '1', '2025-09-25 20:00:00'),
 ('63', 'RE028', 'Porta placa', 'Accesorios', 'Leopard', 'LE 150', '150', '25000.00', '100', '10', '2', '2025-09-25 20:00:00'),
 ('64', 'RE029', 'Porta baul', 'Accesorios', 'Kenton', 'KT 200', '200', '45000.00', '80', '8', '3', '2025-09-25 20:00:00'),
-('65', 'RE030', 'Baul trasero', 'Accesorios', 'Honda', 'CB 200', '200', '120000.00', '24', '3', '3', '2025-09-25 20:00:00'),
+('65', 'RE030', 'Baul trasero', 'Accesorios', 'Honda', 'CB 200', '200', '120000.00', '80', '3', '3', '2025-09-25 20:00:00'),
 ('66', 'RE031', 'Juego embrague', 'Transmision', 'Honda', 'CG 125', '125', '55000.00', '70', '7', '1', '2025-09-25 20:00:00'),
 ('67', 'RE032', 'Radiador', 'Motor', 'Honda', 'Titan 150', '150', '140000.00', '20', '2', '1', '2025-09-25 20:00:00'),
 ('68', 'RE033', 'Termostato', 'Motor', 'Honda', 'CB 200', '200', '30000.00', '60', '6', '3', '2025-09-25 20:00:00'),
@@ -554,16 +623,16 @@ INSERT INTO `productos` (`id`, `codigo`, `nombre`, `categoria`, `marca`, `modelo
 -- Estructura de tabla `proveedores`
 DROP TABLE IF EXISTS `proveedores`;
 CREATE TABLE `proveedores` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `empresa` varchar(150) NOT NULL,
   `contacto` varchar(100) DEFAULT NULL,
   `telefono` varchar(50) DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
   `direccion` varchar(255) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `ruc` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `proveedores`
 INSERT INTO `proveedores` (`id`, `empresa`, `contacto`, `telefono`, `email`, `direccion`, `created_at`, `ruc`) VALUES
@@ -581,17 +650,17 @@ INSERT INTO `proveedores` (`id`, `empresa`, `contacto`, `telefono`, `email`, `di
 -- Estructura de tabla `recibos_dinero`
 DROP TABLE IF EXISTS `recibos_dinero`;
 CREATE TABLE `recibos_dinero` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `numero_recibo` varchar(50) NOT NULL,
-  `cliente_id` int(11) NOT NULL,
-  `venta_credito_id` int(11) DEFAULT NULL,
-  `cuota_id` int(11) DEFAULT NULL,
+  `cliente_id` bigint(20) NOT NULL,
+  `venta_credito_id` bigint(20) DEFAULT NULL,
+  `cuota_id` bigint(20) DEFAULT NULL,
   `monto` decimal(15,2) NOT NULL,
   `fecha_pago` datetime NOT NULL,
   `forma_pago` enum('Efectivo','Tarjeta','Transferencia','Cheque') DEFAULT 'Efectivo',
   `concepto` varchar(255) DEFAULT NULL,
-  `observaciones` text,
-  `usuario_id` int(11) DEFAULT NULL,
+  `observaciones` longtext DEFAULT NULL,
+  `usuario_id` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `numero_recibo` (`numero_recibo`),
   KEY `idx_cliente` (`cliente_id`),
@@ -601,7 +670,7 @@ CREATE TABLE `recibos_dinero` (
   CONSTRAINT `recibos_dinero_ibfk_1` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE CASCADE,
   CONSTRAINT `recibos_dinero_ibfk_2` FOREIGN KEY (`venta_credito_id`) REFERENCES `ventas_credito` (`id`) ON DELETE SET NULL,
   CONSTRAINT `recibos_dinero_ibfk_3` FOREIGN KEY (`cuota_id`) REFERENCES `cuotas_credito` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `recibos_dinero`
 INSERT INTO `recibos_dinero` (`id`, `numero_recibo`, `cliente_id`, `venta_credito_id`, `cuota_id`, `monto`, `fecha_pago`, `forma_pago`, `concepto`, `observaciones`, `usuario_id`) VALUES
@@ -614,15 +683,15 @@ INSERT INTO `recibos_dinero` (`id`, `numero_recibo`, `cliente_id`, `venta_credit
 -- Estructura de tabla `sesiones`
 DROP TABLE IF EXISTS `sesiones`;
 CREATE TABLE `sesiones` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `usuario_id` int(11) NOT NULL,
-  `fecha_login` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `usuario_id` bigint(20) NOT NULL,
+  `fecha_login` timestamp NOT NULL DEFAULT current_timestamp(),
   `fecha_logout` timestamp NULL DEFAULT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `usuario_id` (`usuario_id`),
   CONSTRAINT `sesiones_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `sesiones`
 INSERT INTO `sesiones` (`id`, `usuario_id`, `fecha_login`, `fecha_logout`, `ip_address`) VALUES
@@ -642,23 +711,30 @@ INSERT INTO `sesiones` (`id`, `usuario_id`, `fecha_login`, `fecha_logout`, `ip_a
 ('14', '1', '2025-11-07 14:05:54', NULL, '127.0.0.1'),
 ('15', '1', '2025-11-07 14:09:03', '2025-11-07 14:09:59', '192.168.1.249'),
 ('16', '1', '2025-11-08 19:25:01', NULL, '127.0.0.1'),
-('17', '1', '2025-11-09 12:02:27', NULL, '127.0.0.1');
+('17', '1', '2025-11-09 12:02:27', '2025-11-09 12:34:58', '127.0.0.1'),
+('18', '2', '2025-11-09 12:35:00', '2025-11-09 12:35:26', '127.0.0.1'),
+('19', '1', '2025-11-09 12:35:29', '2025-11-09 13:14:34', '127.0.0.1'),
+('20', '1', '2026-02-08 22:24:52', NULL, '::1'),
+('21', '2', '2026-02-08 22:28:29', '2026-02-08 22:28:36', '::1'),
+('22', '1', '2026-02-08 22:28:44', NULL, '::1'),
+('23', '1', '2026-02-08 22:29:41', NULL, '::1'),
+('24', '1', '2026-02-09 15:53:59', NULL, '::1');
 
 
 -- Estructura de tabla `usuarios`
 DROP TABLE IF EXISTS `usuarios`;
 CREATE TABLE `usuarios` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `usuario` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
   `nombre` varchar(100) NOT NULL,
   `rol` varchar(50) NOT NULL DEFAULT 'Vendedor',
-  `activo` tinyint(1) DEFAULT '1',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `activo` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `usuario` (`usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `usuarios`
 INSERT INTO `usuarios` (`id`, `usuario`, `password`, `nombre`, `rol`, `activo`, `created_at`, `updated_at`) VALUES
@@ -669,11 +745,11 @@ INSERT INTO `usuarios` (`id`, `usuario`, `password`, `nombre`, `rol`, `activo`, 
 -- Estructura de tabla `ventas_credito`
 DROP TABLE IF EXISTS `ventas_credito`;
 CREATE TABLE `ventas_credito` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `factura_id` int(11) DEFAULT NULL,
-  `cliente_id` int(11) NOT NULL,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `factura_id` bigint(20) DEFAULT NULL,
+  `cliente_id` bigint(20) NOT NULL,
   `monto_total` decimal(15,2) NOT NULL,
-  `numero_cuotas` int(11) NOT NULL,
+  `numero_cuotas` bigint(20) NOT NULL,
   `monto_cuota` decimal(15,2) NOT NULL,
   `fecha_creacion` datetime NOT NULL,
   `estado` enum('Activa','Cancelada','Finalizada') DEFAULT 'Activa',
@@ -684,7 +760,7 @@ CREATE TABLE `ventas_credito` (
   KEY `idx_estado` (`estado`),
   CONSTRAINT `ventas_credito_ibfk_1` FOREIGN KEY (`factura_id`) REFERENCES `cabecera_factura_ventas` (`id`) ON DELETE CASCADE,
   CONSTRAINT `ventas_credito_ibfk_2` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos de la tabla `ventas_credito`
 INSERT INTO `ventas_credito` (`id`, `factura_id`, `cliente_id`, `monto_total`, `numero_cuotas`, `monto_cuota`, `fecha_creacion`, `estado`, `fecha_finalizacion`) VALUES

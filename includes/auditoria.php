@@ -29,47 +29,54 @@ if (!function_exists('registrarAuditoria')) {
         if ($usuario_id > 0) {
             try {
                 $stmt = $pdo->prepare("SELECT nombre FROM usuarios WHERE id = ?");
-                $stmt->execute(array($usuario_id));
-                $user = $stmt->fetch();
-                if ($user) {
-                    $nombre_usuario = $user['nombre'] . ' (' . (isset($_SESSION['usuario']) ? $_SESSION['usuario'] : 'N/A') . ')';
+                $stmt->execute([$usuario_id]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($user && isset($user['nombre'])) {
+                    $session_usuario = $_SESSION['usuario'] ?? 'N/A';
+                    $nombre_usuario = $user['nombre'] . ' (' . $session_usuario . ')';
                 }
             } catch (Exception $e) {
                 $nombre_usuario = 'Usuario #' . $usuario_id;
+                error_log('Error en auditoria al obtener nombre de usuario: ' . $e->getMessage());
             }
         }
         
         // Insertar en auditoría
         try {
+            $ip_address = $_SERVER['REMOTE_ADDR'] ?? 'N/A';
             $stmt = $pdo->prepare("INSERT INTO auditoria (usuario_id, nombre_usuario, accion, modulo, detalle, fecha_hora, ip_address) 
                                     VALUES (?, ?, ?, ?, ?, NOW(), ?)");
-            $stmt->execute(array(
+            $stmt->execute([
                 $usuario_id,
                 $nombre_usuario,
                 $accion,
                 $modulo,
                 $detalle,
-                isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'N/A'
-            ));
+                $ip_address
+            ]);
         } catch (Exception $e) {
             // Si la tabla no existe, intentar crearla
-            if (strpos($e->getMessage(), "doesn't exist") !== false) {
+            if (strpos($e->getMessage(), "doesn't exist") !== false || strpos($e->getMessage(), "does not exist") !== false) {
                 crearTablaAuditoria();
                 // Intentar nuevamente
                 try {
+                    $ip_address = $_SERVER['REMOTE_ADDR'] ?? 'N/A';
                     $stmt = $pdo->prepare("INSERT INTO auditoria (usuario_id, nombre_usuario, accion, modulo, detalle, fecha_hora, ip_address) 
                                             VALUES (?, ?, ?, ?, ?, NOW(), ?)");
-                    $stmt->execute(array(
+                    $stmt->execute([
                         $usuario_id,
                         $nombre_usuario,
                         $accion,
                         $modulo,
                         $detalle,
-                        isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'N/A'
-                    ));
+                        $ip_address
+                    ]);
                 } catch (Exception $e2) {
                     // Si falla, no hacer nada (no interrumpir el flujo)
+                    error_log('Error en auditoria al insertar registro: ' . $e2->getMessage());
                 }
+            } else {
+                error_log('Error en auditoria: ' . $e->getMessage());
             }
         }
     }

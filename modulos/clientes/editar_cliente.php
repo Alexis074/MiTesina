@@ -1,8 +1,12 @@
 <?php
 date_default_timezone_set('America/Asuncion');
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+$base_url = '/repuestos/';
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
 include $base_path . 'includes/conexion.php';
-include $base_path . 'includes/header.php';
+include $base_path . 'includes/session.php';
+include $base_path . 'includes/auth.php';
+requerirLogin();
+requerirPermiso('clientes', 'editar');
 
 if (!isset($_GET['id'])) {
     die("ID de cliente no proporcionado.");
@@ -51,12 +55,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Cliente - Repuestos Doble A</title>
+    <link rel="stylesheet" href="<?= $base_url ?>style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+
+<?php include $base_path . 'includes/header.php'; ?>
 
 <div class="container form-container">
     <h1>Editar Cliente</h1>
     
     <div class="form-actions-right" style="margin-bottom: 20px;">
-        <a href="/repuestos/modulos/clientes/clientes.php" class="btn-cancelar"><i class="fas fa-arrow-left"></i> Volver</a>
+        <a href="<?= $base_url ?>modulos/clientes/clientes.php" class="btn-cancelar"><i class="fas fa-arrow-left"></i> Volver</a>
     </div>
     
     <?php if($mensaje != ""): ?>

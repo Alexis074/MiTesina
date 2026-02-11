@@ -1,6 +1,6 @@
 <?php
 date_default_timezone_set('America/Asuncion');
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 
 $pagare_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;

@@ -1,13 +1,24 @@
 <?php    
 date_default_timezone_set('America/Asuncion');
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/session.php';
 include $base_path . 'includes/auth.php';
 requerirLogin();
 requerirPermiso('ventas', 'ver');
-include $base_path . 'includes/header.php';
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ventas - Repuestos Doble A</title>
+    <link rel="stylesheet" href="/repuestos/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+<?php include $base_path . 'includes/header.php'; ?>
 
+<?php
 $mensaje = "";
 $factura_id = 0;
 
@@ -16,7 +27,7 @@ $productos = $pdo->query("SELECT * FROM productos ORDER BY nombre ASC")->fetchAl
 
 // Verificar si hay caja abierta
 $stmtCaja = $pdo->query("SELECT * FROM caja WHERE estado='Abierta' ORDER BY id DESC LIMIT 1");
-$caja_abierta = $stmtCaja->fetch();
+$caja_abierta = $stmtCaja->fetch(PDO::FETCH_ASSOC);
 
 // Obtener ventas recientes (últimas 20, excluyendo anuladas)
 $stmt_ventas_recientes = $pdo->query("SELECT fv.*, c.nombre, c.apellido 
@@ -30,7 +41,7 @@ $ventas_recientes = $stmt_ventas_recientes->fetchAll();
 $serie_1 = 1;
 $serie_2 = 1;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $cliente_id = (int)$_POST['cliente_id'];
     $ruc_cliente = isset($_POST['ruc']) ? $_POST['ruc'] : '';
     $condicion_venta = isset($_POST['condicion_venta']) ? $_POST['condicion_venta'] : 'Contado';
@@ -128,8 +139,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $numero_factura = sprintf('%03d-%03d-%06d',$serie_1,$serie_2,$next_id);
         
         $stmt_verificar = $pdo->prepare("SELECT id FROM cabecera_factura_ventas WHERE numero_factura = ?");
-        $stmt_verificar->execute(array($numero_factura));
-        if ($stmt_verificar->fetch()) {
+        $stmt_verificar->execute([$numero_factura]);
+        if ($stmt_verificar->fetch(PDO::FETCH_ASSOC)) {
             $next_id++;
             $numero_factura = sprintf('%03d-%03d-%06d',$serie_1,$serie_2,$next_id);
         }
@@ -156,8 +167,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         $stmt_verificar_timbrado = $pdo->prepare("SELECT id FROM cabecera_factura_ventas WHERE timbrado = ?");
-        $stmt_verificar_timbrado->execute(array($next_timbrado));
-        if ($stmt_verificar_timbrado->fetch()) {
+        $stmt_verificar_timbrado->execute([$next_timbrado]);
+        if ($stmt_verificar_timbrado->fetch(PDO::FETCH_ASSOC)) {
             $next_timbrado++;
         }
         

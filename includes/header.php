@@ -1,12 +1,15 @@
 <?php 
-$base_url = '/repuestos/';
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
-$current_page = $_SERVER['REQUEST_URI'];
-include $base_path . 'includes/session.php';
-include $base_path . 'includes/auth.php';
+// Evitar incluir session y auth si ya están incluidos
+if (!isset($base_url)) {
+    $base_url = '/repuestos/';
+}
+if (!isset($base_path)) {
+    $base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
+}
+$current_page = $_SERVER['REQUEST_URI'] ?? '/repuestos/';
+// No incluir session y auth aquí porque ya se incluyen en los archivos principales
+// Las hojas de estilo ya están incluidas en el <head> de cada página
 ?>
-<link rel="stylesheet" href="/repuestos/style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
 <div class="navbar">
     <div class="logo"><i class="fas fa-cogs"></i> Repuestos Doble A</div>

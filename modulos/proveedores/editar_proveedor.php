@@ -1,8 +1,12 @@
 <?php
 date_default_timezone_set('America/Asuncion');
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+$base_url = '/repuestos/';
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
 include $base_path . 'includes/conexion.php';
-include $base_path . 'includes/header.php';
+include $base_path . 'includes/session.php';
+include $base_path . 'includes/auth.php';
+requerirLogin();
+requerirPermiso('proveedores', 'editar');
 
 $mensaje = "";
 
@@ -14,9 +18,10 @@ if (isset($_GET['id'])) {
     $fila = $stmt->fetch();
 
     if (!$fila) {
-        echo "<p>Proveedor no encontrado.</p>";
-        exit;
+        die("Proveedor no encontrado.");
     }
+} else {
+    die("ID no proporcionado.");
 }
 
 // Procesar formulario
@@ -33,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensaje = "Error: El nombre de la empresa contiene caracteres no válidos.";
     } elseif (!preg_match("/^[A-Za-z\s]+$/", $contacto)) {
         $mensaje = "Error: El contacto solo puede contener letras y espacios.";
-    } elseif (!preg_match("/^[0-9]+$/", $telefono)) {
+    } elseif (!preg_match("/^[0-9\-]+$/", $telefono)) {
         $mensaje = "Error: El teléfono solo puede contener números.";
     } else {
         $sql = "UPDATE proveedores SET 
@@ -55,68 +60,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':id'=>$id
         ])) {
             $mensaje = "Proveedor actualizado correctamente.";
+            $fila = ['empresa'=>$empresa, 'contacto'=>$contacto, 'telefono'=>$telefono, 'email'=>$email, 'direccion'=>$direccion, 'ruc'=>$ruc, 'id'=>$id];
         } else {
             $mensaje = "Error al actualizar proveedor.";
         }
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Editar Proveedor</title>
-<link rel="stylesheet" href="/repuestos/style.css">
-<style>
-.container { max-width:600px; margin:80px auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
-h1 { text-align:center; margin-bottom:20px; }
-label { display:block; margin:10px 0 5px; }
-input { width:100%; padding:8px; margin-bottom:15px; border:1px solid #ccc; border-radius:4px; font-size:16px; }
-button { width:100%; padding:10px; background:#2563eb; color:white; border:none; border-radius:4px; font-size:16px; cursor:pointer; }
-button:hover { background:#1e40af; }
-.mensaje { padding:10px; margin-bottom:15px; border-radius:4px; text-align:center; }
-.mensaje.exito { background-color:#d1fae5; color:#065f46; }
-.mensaje.error { background-color:#fee2e2; color:#991b1b; }
-</style>
+    <meta charset="UTF-8">
+    <title>Editar Proveedor - Repuestos Doble A</title>
+    <link rel="stylesheet" href="<?= $base_url ?>style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
 
-<div class="container">
-<h1>Editar Proveedor</h1>
+<?php include $base_path . 'includes/header.php'; ?>
 
-<div style="margin-bottom: 20px; text-align: right;">
-    <a href="/repuestos/modulos/proveedores/proveedores.php" class="btn-cancelar" style="display: inline-block; padding: 8px 15px; background:rgb(255, 0, 0); color: white; text-decoration: none; border-radius: 4px;"><i class="fas fa-arrow-left"></i> Volver</a>
-</div>
+<div class="container form-container">
+    <h1>Editar Proveedor</h1>
 
-<?php if($mensaje != ""): ?>
-    <div class="mensaje <?= strpos($mensaje,'Error') === false ? 'exito' : 'error' ?>"><?= $mensaje; ?></div>
-<?php endif; ?>
-<form method="POST">
-<input type="hidden" name="id" value="<?= $fila['id'] ?>">
+    <div class="form-actions-right" style="margin-bottom: 20px;">
+        <a href="<?= $base_url ?>modulos/proveedores/proveedores.php" class="btn-cancelar"><i class="fas fa-arrow-left"></i> Volver</a>
+    </div>
 
-<label>Empresa:</label>
-<input type="text" name="empresa" value="<?= $fila['empresa'] ?>" required>
+    <?php if($mensaje != ""): ?>
+        <div class="mensaje <?= strpos($mensaje,'Error') === false ? 'exito' : 'error' ?>"><?= $mensaje; ?></div>
+    <?php endif; ?>
+    <form method="POST">
+        <input type="hidden" name="id" value="<?= htmlspecialchars($fila['id']) ?>">
 
-<label>Contacto:</label>
-<input type="text" name="contacto" value="<?= $fila['contacto'] ?>" required>
+        <label>Empresa:</label>
+        <input type="text" name="empresa" value="<?= htmlspecialchars($fila['empresa']) ?>" required>
 
-<label>Teléfono:</label>
-<input type="text" name="telefono" value="<?= $fila['telefono'] ?>">
+        <label>Contacto:</label>
+        <input type="text" name="contacto" value="<?= htmlspecialchars($fila['contacto']) ?>" required>
 
-<label>Email:</label>
-<input type="email" name="email" value="<?= $fila['email'] ?>">
+        <label>Teléfono:</label>
+        <input type="text" name="telefono" value="<?= htmlspecialchars($fila['telefono']) ?>">
 
-<label>Dirección:</label>
-<input type="text" name="direccion" value="<?= $fila['direccion'] ?>">
+        <label>Email:</label>
+        <input type="email" name="email" value="<?= htmlspecialchars($fila['email']) ?>">
 
-<label>RUC:</label>
-<input type="text" name="ruc" value="<?= isset($fila['ruc']) ? $fila['ruc'] : '' ?>" placeholder="Ej: 80012345-6">
+        <label>Dirección:</label>
+        <input type="text" name="direccion" value="<?= htmlspecialchars($fila['direccion']) ?>">
 
-<button type="submit">Actualizar Proveedor</button>
-</form>
+        <label>RUC:</label>
+        <input type="text" name="ruc" value="<?= isset($fila['ruc']) ? htmlspecialchars($fila['ruc']) : '' ?>" placeholder="Ej: 80012345-6">
+
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">Actualizar Proveedor</button>
+        </div>
+    </form>
 </div>
 
 <?php include $base_path . 'includes/footer.php'; ?>
-</body>
-</html>

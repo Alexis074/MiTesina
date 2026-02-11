@@ -1,13 +1,24 @@
 <?php
 date_default_timezone_set('America/Asuncion');
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
 include $base_path . 'includes/conexion.php';
 include $base_path . 'includes/session.php';
 include $base_path . 'includes/auth.php';
 requerirLogin();
 requerirPermiso('reportes', 'ver');
-include $base_path . 'includes/header.php';
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reportes - Repuestos Doble A</title>
+    <link rel="stylesheet" href="/repuestos/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+<?php include $base_path . 'includes/header.php'; ?>
 
+<?php
 // Obtener fechas por defecto (hoy y último mes)
 $fecha_hasta = isset($_GET['fecha_hasta']) ? $_GET['fecha_hasta'] : date('Y-m-d');
 $fecha_desde = isset($_GET['fecha_desde']) ? $_GET['fecha_desde'] : date('Y-m-d', strtotime('-30 days'));

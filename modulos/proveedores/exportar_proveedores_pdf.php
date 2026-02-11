@@ -1,7 +1,9 @@
 <?php
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
-include $base_path . 'includes/conexion.php'; // PDO
-require($base_path . 'modulos/fpdf/fpdf.php'); // Ajusta la ruta si tu FPDF está en otra carpeta
+date_default_timezone_set('America/Asuncion');
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
+$GLOBALS['base_path'] = $base_path;
+include $base_path . 'includes/conexion.php';
+require($base_path . 'fpdf/fpdf.php');
 
 class PDF extends FPDF
 {

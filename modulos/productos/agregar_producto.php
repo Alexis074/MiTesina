@@ -1,8 +1,12 @@
 <?php
 date_default_timezone_set('America/Asuncion');
 $base_url = '/repuestos/';
-include $_SERVER['DOCUMENT_ROOT'] . $base_url . 'includes/header.php';
-include $_SERVER['DOCUMENT_ROOT'] . $base_url . 'includes/conexion.php'; // PDO
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
+include $base_path . 'includes/conexion.php';
+include $base_path . 'includes/session.php';
+include $base_path . 'includes/auth.php';
+requerirLogin();
+requerirPermiso('productos', 'crear');
 
 $mensaje = "";
 
@@ -61,8 +65,11 @@ if (isset($_POST['guardar'])) {
 <meta charset="UTF-8">
 <title>Agregar Producto - Repuestos Doble A</title>
 <link rel="stylesheet" href="<?= $base_url ?>style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
+
+<?php include $base_path . 'includes/header.php'; ?>
 
 <div class="container form-container">
     <h1>Agregar Producto</h1>
@@ -108,6 +115,6 @@ if (isset($_POST['guardar'])) {
     </form>
 </div>
 
-<?php include $_SERVER['DOCUMENT_ROOT'] . $base_url . 'includes/footer.php'; ?>
+<?php include $base_path . 'includes/footer.php'; ?>
 </body>
 </html>

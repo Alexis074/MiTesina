@@ -1,6 +1,6 @@
 <?php
 date_default_timezone_set('America/Asuncion');
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
 include $base_path . 'includes/session.php';
 include $base_path . 'includes/auth.php';
 requerirLogin();
@@ -10,7 +10,8 @@ requerirLogin();
 <head>
   <meta charset="UTF-8">
   <title>Repuestos Doble A</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/repuestos/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <style>
     .container {
       display: flex;
@@ -41,7 +42,7 @@ requerirLogin();
 </head>
 <body>
 
-  <?php include 'includes/header.php'; ?>
+  <?php include $base_path . 'includes/header.php'; ?>
 
   <div class="container">
     <div class="welcome-text">

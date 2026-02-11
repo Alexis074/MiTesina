@@ -1,10 +1,10 @@
 <?php
-$base_path = $_SERVER['DOCUMENT_ROOT'] . '/repuestos/';
+$base_url = '/repuestos/';
+$base_path = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/repuestos/';
 include $base_path . 'includes/conexion.php';
-include $base_path . 'includes/header.php';
+include $base_path . 'includes/session.php';
 include $base_path . 'includes/auth.php';
-
-// Verificar permisos
+requerirLogin();
 requerirPermiso('usuarios', 'crear');
 
 $mensaje = '';
@@ -22,8 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Verificar si el usuario ya existe
         $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE usuario = ?");
-        $stmt->execute(array($usuario));
-        if ($stmt->fetch()) {
+        $stmt->execute([$usuario]);
+        if ($stmt->fetch(PDO::FETCH_ASSOC)) {
             $error = 'El usuario ya existe.';
         } else {
             // Hash de la contraseña
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Insertar usuario
             $stmt = $pdo->prepare("INSERT INTO usuarios (usuario, password, nombre, rol, activo) VALUES (?, ?, ?, ?, ?)");
-            if ($stmt->execute(array($usuario, $password_hash, $nombre, $rol, $activo))) {
+            if ($stmt->execute([$usuario, $password_hash, $nombre, $rol, $activo])) {
                 // Registrar en auditoría
                 include $base_path . 'includes/auditoria.php';
                 registrarAuditoria('crear', 'usuarios', 'Usuario ' . $usuario . ' creado. Rol: ' . $rol);
@@ -47,12 +47,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Obtener roles disponibles
 $roles = array('Administrador', 'Vendedor');
 ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Agregar Usuario - Repuestos Doble A</title>
+    <link rel="stylesheet" href="<?= $base_url ?>style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+
+<?php include $base_path . 'includes/header.php'; ?>
 
 <div class="container">
     <h1>Agregar Usuario</h1>
     
     <div class="form-actions-right" style="margin-bottom: 20px;">
-        <a href="/repuestos/modulos/usuarios/usuarios.php" class="btn-cancelar"><i class="fas fa-arrow-left"></i> Volver</a>
+        <a href="<?= $base_url ?>modulos/usuarios/usuarios.php" class="btn-cancelar"><i class="fas fa-arrow-left"></i> Volver</a>
     </div>
     
     <?php if ($mensaje): ?>
@@ -87,7 +98,7 @@ $roles = array('Administrador', 'Vendedor');
             
             <div class="form-actions">
                 <button type="submit" class="btn-submit">Crear Usuario</button>
-                <a href="usuarios.php" class="btn-cancelar">Cancelar</a>
+                <a href="<?= $base_url ?>modulos/usuarios/usuarios.php" class="btn-cancelar">Cancelar</a>
             </div>
         </form>
     </div>
